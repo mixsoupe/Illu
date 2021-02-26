@@ -1,0 +1,36 @@
+UI
+- L'angle de la décal est calculé avec l'angle du spot. Un paramètre ajuste l'angle et un autre ajuste l'incidence avant/arrière
+
+GENERAL
+- Possibilité de faire des preview (en mettant les images en cache) ?
+- Prévoir un overscan dans le framebuffer
+- Trouver une solution pour récupérer les vertex groups dans le mesh évalué
+- Améliorer la gestion des buffers et des textures opengl
+
+DISTANCE FIELD
+- Trouver un moyen de régler automatiquent le distance field
+
+SHADOWS:
+- Passer les ombres en 16 bits ?
+- Améliorer le sss des soft shadows
+- Lier l'intensité du sss au paramètre de l'ui
+- Ajouter le support des perspective lights:
+    . Ce n'est plus l'angle qui compte, mais la position
+    . Il faut ajuster le frustrum en perspective. Comment ?
+    . Il faut faire un offset de la lumière en rotation pour s'adapter au frustrum
+    . Il faut calculer le frustrum final pour s'ajuster sur l'objet
+    . Possibilité 2 : on n'ajuste pas le frustrum, mais on utilise l'angle de la spot light
+    . Le jittering des soft shadows se fait avec la position, donc il faut calculer une nouvelle pattern
+
+- Ajouter le support des point lights:
+    . Se renseigner sur les cubemaps
+
+- Gérer les surfaces d'ombre très grandes:
+    Cascade shadows :
+        . Ajuster le near et far plane de la camera
+        . Découper le frustrum en 3
+        . Récupérer les coordonnées de ces 3 boites en world space
+        . Ajuster 3 frustrum de light sur ces box > 3 light MVPs
+        . Calculer 3 shadowmaps
+        . Faire la render passe finale en chargeant ces 3 shadowmaps, et faire le lookup en fonction du Z
+    
