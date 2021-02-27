@@ -280,7 +280,6 @@ def register():
         bpy.types.Scene.playback = bpy.props.BoolProperty(name="Update on Playback", default=False)
     
     bpy.app.handlers.frame_change_post.append(update_handler)
-    print (bpy.app.handlers.frame_change_post)
     
 
 def unregister():
