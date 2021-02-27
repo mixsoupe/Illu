@@ -314,7 +314,12 @@ def get_linked_objects(instance):
     for obj in collection.all_objects:
         bm = bmesh.new()
         bm.from_object(object=obj, depsgraph=depsgraph, deform=True)
-        print (bm)
 
+def get_light_angle(light, camera):
+    z_vector = light.matrix_world.col[2].to_3d()
+    view_z_vector = z_vector @ camera.matrix_world
+    angle = math.atan2(view_z_vector[1], view_z_vector[0])
+
+    return math.degrees(angle)
 
     

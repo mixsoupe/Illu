@@ -40,14 +40,18 @@ def generate_images(obj, image_name, light, angle, shadow_size, soft_shadow, sel
         bgl_filter_sss(shadow_buffer, samples = 50, radius = 50) #FIX améliorer la diffusion des ombres
     
     #Base buffer  
-    if self_shading: 
+    if self_shading:
+        #Base render
         bgl_base_render(base_buffer, vertices, indices, colors)  
         bgl_filter_sss(base_buffer, samples = 50, radius = 50)
 
         #Distance field buffer
         #bgl_filter_distance_field(base_buffer)
 
-        bgl_filter_decal(base_buffer, 45)
+        #Decal
+        camera = bpy.context.scene.camera
+        light_angle = get_light_angle(light, camera) - angle
+        bgl_filter_decal(base_buffer, light_angle)
         bgl_filter_sss(base_buffer, samples = 60, radius = 20)
 
         if len(shadow_objs) > 0:
@@ -67,7 +71,7 @@ def generate_images(obj, image_name, light, angle, shadow_size, soft_shadow, sel
     
     #Enregistrement des images
     buffer_to_image( image_name, buffer )
-    print((time.time() - T)*1000)
+    #print((time.time() - T)*1000)
 
 
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
@@ -94,7 +98,6 @@ def bgl_shadow(shadow_buffer, vertices, indices, colors,
     EVITER LES CSMs POUR LES PETITS OBJETS ?"""
     test = Vector((1, 1, 1))
     new = MVP.inverted() @ test
-    print (new)
 
     #Shaders creation
     shader_depth =  compile_shader("shadow_depth.vert", "shadow_depth.frag")
