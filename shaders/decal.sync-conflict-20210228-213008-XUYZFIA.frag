@@ -1,7 +1,6 @@
 in vec2 vTexCoord;
 
 uniform sampler2D Sampler;
-uniform float scale;
 uniform float angle;
 uniform float dim_x;
 uniform float dim_y;
@@ -21,18 +20,18 @@ void main()
     
     int end = 0;        
     float value = 0.0;
-    int iteration = 100;
+    int iteration = 200;
 
     for (int i = 1; i < iteration; i++) {        
         float rand = (random(vTexCoord) * 2 - 1) / 2;
-        float rand_angle = angle + (rand*1.0);
+        float rand_angle = angle + (rand*0.0);
                 
         vec2 direction = vec2(cos(rand_angle)/dim_x, sin(rand_angle)/dim_y);
         
-        float sample_a = texture(Sampler, vTexCoord + direction * dist * scale * i).a;
+        float sample_a = texture(Sampler, vTexCoord + direction * dist * i).a;
 
         float current_z = texture(Sampler, vTexCoord).b;
-        float sample_z = texture(Sampler, vTexCoord + direction * dist * scale * i).b;
+        float sample_z = texture(Sampler, vTexCoord + direction * dist * i).b;
         
         float delta_z = sample_z - current_z;
 

@@ -1,11 +1,12 @@
 in vec2 vTexCoord;
 
 uniform sampler2D Sampler;
-uniform float scale;
 uniform float angle;
 uniform float dim_x;
 uniform float dim_y;
 uniform int inverse;
+
+
 
 float random (vec2 st) {
         return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
@@ -14,29 +15,33 @@ float random (vec2 st) {
 void main()    
 {
     vec2 st = gl_FragCoord.xy;
-    float rand = random(st);        
+    float rand = random(st);
+        
 
     vec4 colorBase = texture(Sampler, vTexCoord).rgba;
-    float dist = colorBase.g;            
+    float dist = colorBase.g;
+            
     
     int end = 0;        
     float value = 0.0;
-    int iteration = 100;
+    int iteration = 200 + inverse * 200;
+    iteration = 100;
+
 
     for (int i = 1; i < iteration; i++) {        
         float rand = (random(vTexCoord) * 2 - 1) / 2;
-        float rand_angle = angle + (rand*1.0);
+        float rand_angle = angle + (rand*0.0);
                 
         vec2 direction = vec2(cos(rand_angle)/dim_x, sin(rand_angle)/dim_y);
         
-        float sample_a = texture(Sampler, vTexCoord + direction * dist * scale * i).a;
+        float a = texture(Sampler, vTexCoord + direction * dist * i).a;
 
-        float current_z = texture(Sampler, vTexCoord).b;
-        float sample_z = texture(Sampler, vTexCoord + direction * dist * scale * i).b;
+        float z = texture(Sampler, vTexCoord).b;
+        float sample_z = texture(Sampler, vTexCoord + direction * dist * i).b;
         
-        float delta_z = sample_z - current_z;
+        float delta_z = sample_z - z + (1 - a);
 
-        if (sample_a == 0 &&  end == 0) {
+        if (a == 0 &&  end == 0) {
             value = 1.0 - (float(i)/iteration);
             end = 1;              
         }
@@ -50,12 +55,15 @@ void main()
     //value = abs(inverse - value);
     //value += inverse/100000;
     if (inverse == 1) {
-        value = colorBase.r * (value + 1)/2;
+        value = colorBase.r * value + 0.5; // Trouver la formule du gamma
     }
     else {
-        value = colorBase.r - value/2;
+        value = colorBase.r - value;
     }
+    
+
                 
     gl_FragColor = vec4(value, colorBase.g, colorBase.b, colorBase.a);
+
 
 }

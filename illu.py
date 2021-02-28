@@ -22,7 +22,8 @@ from mathutils import Matrix, Vector, Euler
 
 from . shader_utils import *
 
-def generate_images(obj, image_name, light, angle, shadow_size, soft_shadow, self_shading):
+#FIX Prévoir un overscan
+def generate_images(obj, image_name, light, scale, angle, shadow_size, soft_shadow, self_shading):
     T = time.time()
     dim_x, dim_y =  get_resolution()
 
@@ -42,18 +43,16 @@ def generate_images(obj, image_name, light, angle, shadow_size, soft_shadow, sel
     #Base buffer  
     if self_shading:
         #Base render
-        bgl_base_render(base_buffer, vertices, indices, colors)  
+        bgl_base_render(base_buffer, vertices, indices, colors)        
         bgl_filter_sss(base_buffer, samples = 50, radius = 50)
 
         #Distance field buffer
         #bgl_filter_distance_field(base_buffer)
 
-        #Decal
-        camera = bpy.context.scene.camera
-        light_angle = get_light_angle(light, camera) - angle
-        bgl_filter_decal(base_buffer, light_angle)
-        bgl_filter_sss(base_buffer, samples = 60, radius = 20)
-
+        #Decal        
+        bgl_filter_decal(base_buffer, light, scale, angle)
+        #bgl_filter_sss(base_buffer, samples = 60, radius = 20)
+        
         if len(shadow_objs) > 0:
             merge_buffers(base_buffer, shadow_buffer)
     else:
@@ -260,7 +259,10 @@ def bgl_base_render(offscreen, vertices, indices, colors):
             bgl.glDisable(bgl.GL_DEPTH_TEST)  
 
             
-def bgl_filter_decal(offscreen_A, angle):
+def bgl_filter_decal(offscreen_A, light, scale, angle):
+    camera = bpy.context.scene.camera
+    light_angle = get_light_angle(light, camera) - angle
+
     dim_x, dim_y =  get_resolution()
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
@@ -270,24 +272,26 @@ def bgl_filter_decal(offscreen_A, angle):
     with gpu.matrix.push_pop():
         gpu.matrix.load_projection_matrix(projection_matrix_2d())
     
-    rad = math.radians(angle)
+    rad = math.radians(light_angle)
     with offscreen_B.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_float("scale", scale)
             shader.uniform_float("angle", rad)
             shader.uniform_float("dim_x", dim_x)
             shader.uniform_float("dim_y", dim_y)
             shader.uniform_int("inverse", 1) 
             batch.draw(shader)
 
-    rad = math.radians(angle + 180)
+    rad = math.radians(light_angle + 180)
     with offscreen_A.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_float("scale", scale)
             shader.uniform_float("angle", rad)
             shader.uniform_float("dim_x", dim_x)
             shader.uniform_float("dim_y", dim_y)

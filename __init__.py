@@ -83,7 +83,11 @@ class ILLUNodeProperties(bpy.types.PropertyGroup):
         )
     light: bpy.props.StringProperty(
         name="Light",
-        )        
+        )
+    scale: bpy.props.FloatProperty(
+        name = "Scale",
+        default = 1.0,
+        )      
     angle: bpy.props.FloatProperty(
         name = "Angle Compensation",
         default = 0.0,
@@ -135,6 +139,7 @@ class ILLU_PT_node_ui(bpy.types.Panel):
         layout.prop(illu, "image_name")
         layout.prop_search(illu, "objects", bpy.data, "objects")
         layout.prop_search(illu, "light", bpy.data, "objects")
+        layout.prop(illu, "scale")
         layout.prop(illu, "angle")        
         layout.prop(illu, "soft_shadow")
         layout.prop(illu, "shadow_size")
@@ -232,13 +237,14 @@ class ILLU_OT_update_all(bpy.types.Operator):
 def update_image(illu):
     obj = [bpy.data.objects[illu.objects] ,] 
     image_name = illu.image_name
-    light = bpy.data.objects[illu.light] 
+    light = bpy.data.objects[illu.light]
+    scale = illu.scale
     angle = illu.angle
     shadow_size = int(illu.shadow_size)
     soft_shadow = illu.soft_shadow
     self_shading = illu.self_shading    
 
-    generate_images(obj, image_name, light, angle, shadow_size, soft_shadow, self_shading)
+    generate_images(obj, image_name, light, scale, angle, shadow_size, soft_shadow, self_shading)
 
 def update_all():
     

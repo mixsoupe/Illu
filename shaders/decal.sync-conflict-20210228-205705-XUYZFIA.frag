@@ -45,7 +45,8 @@ void main()
             value = 1.0 - (float(i)/iteration);
             end = 1;              
         }
-        if (delta_z > 0.05 &&  end == 0) {
+        //normaliser en fonction de la distance de la caméra
+        if (delta_z > 0.08 &&  end == 0) {
             value = 1.0 - (float(i)/iteration);
             end = 1;              
         }
