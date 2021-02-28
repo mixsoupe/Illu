@@ -23,7 +23,7 @@ from mathutils import Matrix, Vector, Euler
 from . shader_utils import *
 
 #FIX Prévoir un overscan
-def generate_images(obj, image_name, light, scale, angle, shadow_size, soft_shadow, self_shading):
+def generate_images(obj, image_name, light, scale, depth_precision, angle, shadow_size, soft_shadow, self_shading):
     T = time.time()
     dim_x, dim_y =  get_resolution()
 
@@ -50,8 +50,8 @@ def generate_images(obj, image_name, light, scale, angle, shadow_size, soft_shad
         #bgl_filter_distance_field(base_buffer)
 
         #Decal        
-        bgl_filter_decal(base_buffer, light, scale, angle)
-        #bgl_filter_sss(base_buffer, samples = 60, radius = 20)
+        bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
+        bgl_filter_sss(base_buffer, samples = 60, radius = 20)
         
         if len(shadow_objs) > 0:
             merge_buffers(base_buffer, shadow_buffer)
@@ -259,7 +259,7 @@ def bgl_base_render(offscreen, vertices, indices, colors):
             bgl.glDisable(bgl.GL_DEPTH_TEST)  
 
             
-def bgl_filter_decal(offscreen_A, light, scale, angle):
+def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
     camera = bpy.context.scene.camera
     light_angle = get_light_angle(light, camera) - angle
 
@@ -279,6 +279,7 @@ def bgl_filter_decal(offscreen_A, light, scale, angle):
             shader.bind()
             shader.uniform_int("Sampler", 0)
             shader.uniform_float("scale", scale)
+            shader.uniform_float("depth_precision", depth_precision)
             shader.uniform_float("angle", rad)
             shader.uniform_float("dim_x", dim_x)
             shader.uniform_float("dim_y", dim_y)
@@ -292,6 +293,7 @@ def bgl_filter_decal(offscreen_A, light, scale, angle):
             shader.bind()
             shader.uniform_int("Sampler", 0)
             shader.uniform_float("scale", scale)
+            shader.uniform_float("depth_precision", depth_precision)
             shader.uniform_float("angle", rad)
             shader.uniform_float("dim_x", dim_x)
             shader.uniform_float("dim_y", dim_y)

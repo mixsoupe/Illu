@@ -88,6 +88,10 @@ class ILLUNodeProperties(bpy.types.PropertyGroup):
         name = "Scale",
         default = 1.0,
         )      
+    depth_precision: bpy.props.FloatProperty(
+        name = "Volume Depth Precision",
+        default = 0.08,
+        )    
     angle: bpy.props.FloatProperty(
         name = "Angle Compensation",
         default = 0.0,
@@ -140,6 +144,7 @@ class ILLU_PT_node_ui(bpy.types.Panel):
         layout.prop_search(illu, "objects", bpy.data, "objects")
         layout.prop_search(illu, "light", bpy.data, "objects")
         layout.prop(illu, "scale")
+        layout.prop(illu, "depth_precision")
         layout.prop(illu, "angle")        
         layout.prop(illu, "soft_shadow")
         layout.prop(illu, "shadow_size")
@@ -169,7 +174,7 @@ class ILLU_PT_view3d_ui(bpy.types.Panel):
 
         if is_geometry:        
             layout.prop(illu, "cast_shadow") 
-        layout.prop(context.scene, "playback") 
+        layout.prop(context.scene, "playback")
         layout.operator("illu.update_all")
 
 class ILLU_PT_object_ui(bpy.types.Panel):
@@ -239,12 +244,13 @@ def update_image(illu):
     image_name = illu.image_name
     light = bpy.data.objects[illu.light]
     scale = illu.scale
+    depth_precision = illu.depth_precision
     angle = illu.angle
     shadow_size = int(illu.shadow_size)
     soft_shadow = illu.soft_shadow
     self_shading = illu.self_shading    
 
-    generate_images(obj, image_name, light, scale, angle, shadow_size, soft_shadow, self_shading)
+    generate_images(obj, image_name, light, scale, depth_precision, angle, shadow_size, soft_shadow, self_shading)
 
 def update_all():
     
@@ -284,9 +290,9 @@ def register():
         bpy.types.Object.illu = bpy.props.PointerProperty(type=ILLUObjectProperties, override={'LIBRARY_OVERRIDABLE'}) #FIX Simplifier, supprimer le group de propriété
     if not hasattr( bpy.types.Scene, 'playback'):
         bpy.types.Scene.playback = bpy.props.BoolProperty(name="Update on Playback", default=False)
-    
+
     bpy.app.handlers.frame_change_post.append(update_handler)
-    
+
 
 def unregister():
     addon_updater_ops.register(bl_info)
@@ -297,5 +303,6 @@ def unregister():
     del bpy.types.ShaderNodeTexImage.illu
     del bpy.types.Object.illu
     del bpy.types.Scene.playback
+
 
     bpy.app.handlers.frame_change_post.remove(update_handler)
