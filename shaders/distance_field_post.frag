@@ -7,10 +7,7 @@ void main()
     
     vec4 color = texture(Sampler, vTexCoord).rgba;
     
-    
-    float value = color.b*(1-color.r/1.5);
-    //desactiver cette ligne
-    value = color.b;
+    float value = color.b * (1-color.g)*20;//ajouter de la dynamique
     gl_FragColor = vec4(color.r, color.g, value, 1.0);
 
 }
