@@ -205,7 +205,7 @@ def get_shadow_objects(exclude):
         if obj != exclude[0]:
             if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:
                 shadow_objs.append(obj)
-
+                
     return shadow_objs
 
 def calc_frustrum(view_matrix, vertices):

@@ -248,6 +248,7 @@ def bgl_base_render(offscreen, vertices, indices, colors):
             shader.uniform_float("modelMatrix", view_matrix)
             shader.uniform_float("viewProjectionMatrix", projection_matrix)
             
+            bgl.glDepthMask(bgl.GL_TRUE)
             bgl.glClearDepth(1000000);
             bgl.glClearColor(0.0, 0.0, 0.0, 0.0);
             bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
@@ -300,7 +301,7 @@ def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
             shader.uniform_int("inverse", 0) 
             batch.draw(shader)
 
-    #copy_buffer(offscreen_B, offscreen_A)
+    offscreen_B.free()
             
 
 def bgl_filter_distance_field(offscreen_A):    
