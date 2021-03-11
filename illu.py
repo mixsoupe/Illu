@@ -28,6 +28,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
     dim_x, dim_y =  get_resolution()
 
     base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    base_buffer_copy = gpu.types.GPUOffScreen(dim_x, dim_y)
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
     #Creation du modele        
@@ -45,19 +46,22 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
         #Base render
         bgl_base_render(base_buffer, vertices, indices, colors)        
         bgl_filter_sss(base_buffer, samples = 50, radius = 50)
-        '''
+        copy_buffer(base_buffer, base_buffer_copy)
+
         #Decal        
         bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
         bgl_filter_sss(base_buffer, samples = 60, radius = 20)
 
         #Distance field buffer
-        bgl_filter_distance_field(base_buffer)#FIX L'alpha disparait (et le Z)
-        '''
+        bgl_filter_distance_field(base_buffer_copy) #FIX L'alpha disparait (et le Z)
+        
         #Ajouter le trait
         bgl_filter_line(base_buffer)
 
+        #Merge
+        merge_buffers(base_buffer, base_buffer_copy, "merge_g1")
         if len(shadow_objs) > 0:
-            merge_buffers(base_buffer, shadow_buffer)
+            merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1")
     else:
         copy_buffer(shadow_buffer, base_buffer)
 

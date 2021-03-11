@@ -247,11 +247,11 @@ def copy_buffer(source, target):
             shader.uniform_int("Sampler", 0)
             batch.draw(shader)
 
-def merge_buffers(offscreen_A, offscreen_B):
+def merge_buffers(offscreen_A, offscreen_B, operation):
     dim_x, dim_y =  get_resolution()
     offscreen_C = gpu.types.GPUOffScreen(dim_x, dim_y)
             
-    shader = compile_shader("image2d.vert", "merge_buffers.frag")                        
+    shader = compile_shader("image2d.vert", "{}.frag".format(operation))                        
     batch = batch2d(shader)
 
     with gpu.matrix.push_pop():

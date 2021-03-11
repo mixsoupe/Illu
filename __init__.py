@@ -125,7 +125,7 @@ class ILLU_PT_node_ui(bpy.types.Panel):
     bl_idname = "ILLU_PT_node_ui"
     bl_space_type = "NODE_EDITOR"   
     bl_region_type = "UI"
-    bl_category = "Item"
+    bl_category = "WorkFlow"
     bl_context = "objectmode"
 
     @classmethod
