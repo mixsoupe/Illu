@@ -18,7 +18,7 @@ void main()
     float rand = random(st);        
 
     vec4 colorBase = texture(Sampler, vTexCoord).rgba;
-    float dist = colorBase.g;            
+    float dist = 1.0 - colorBase.g;            
     
     int end = 0;        
     float value = 0.0;

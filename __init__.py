@@ -168,12 +168,13 @@ class ILLU_PT_view3d_ui(bpy.types.Panel):
             layout.label(text = "New addon version available", icon="INFO")
 
         obj = context.active_object
-        obj_type = obj.type
-        illu = obj.illu
-        is_geometry = (obj_type in {'MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'VOLUME', 'HAIR', 'POINTCLOUD'})
-
-        if is_geometry:        
-            layout.prop(illu, "cast_shadow") 
+        
+        if obj is not None:            
+            obj_type = obj.type
+            illu = obj.illu
+            is_geometry = (obj_type in {'MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'VOLUME', 'HAIR', 'POINTCLOUD'})
+            if is_geometry: 
+                layout.prop(illu, "cast_shadow")
         layout.prop(context.scene, "playback")
         layout.operator("illu.update_all")
 

@@ -53,7 +53,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
         bgl_filter_sss(base_buffer, samples = 60, radius = 20)
 
         #Distance field buffer
-        bgl_filter_distance_field(base_buffer_copy) #FIX L'alpha disparait (et le Z)
+        bgl_filter_distance_field(base_buffer_copy)
         
         #Ajouter le trait
         bgl_filter_line(base_buffer)
@@ -62,7 +62,11 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
         merge_buffers(base_buffer, base_buffer_copy, "merge_g1")
         if len(shadow_objs) > 0:
             merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1")
-    else:
+
+    elif len(shadow_objs) == 0:            
+            bgl_base_render(base_buffer, vertices, indices, colors)
+
+    else:             
         copy_buffer(shadow_buffer, base_buffer)
 
     #Lecture du buffer    

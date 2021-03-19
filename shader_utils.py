@@ -185,7 +185,7 @@ def build_model(objects):
             weight_list.append(vg.weight(i))
         weights = np.asarray(weight_list)
     else:
-        weights = np.ones(len(mesh.vertices))
+        weights = np.zeros(len(mesh.vertices))
 
     color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, depth, np.ones(len(mesh.vertices)) ]
     color_rgba = color_rgba.tolist()

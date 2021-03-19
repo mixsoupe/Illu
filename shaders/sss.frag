@@ -23,7 +23,7 @@ void main()
     vec4 colorBase = texture(Sampler, vTexCoord).rgba;    
     vec2 colorM = texture(Sampler, vTexCoord).rg;
     float depthM = texture(Sampler, vTexCoord).b + texture(Sampler, vTexCoord).a;
-    float intensityM = texture(Sampler, vTexCoord).g;
+    float intensityM = 1.0 - texture(Sampler, vTexCoord).g;
 
     //float depthM = (gl_FragCoord.z / gl_FragCoord.w);
     
