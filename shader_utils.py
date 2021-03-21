@@ -156,7 +156,10 @@ def build_model(objects):
       
     normales = np.empty((vlen, 3), 'f')
     mesh.vertices.foreach_get(
-        "normal", np.reshape(normales, vlen * 3)) 
+        "normal", np.reshape(normales, vlen * 3))
+
+    uvs = np.empty((vlen, 3), 'f')
+
 
     dim_x, dim_y =  get_resolution()
 
@@ -193,7 +196,7 @@ def build_model(objects):
     #Nettoyage
     bpy.data.meshes.remove(mesh)
     
-    return vertices, indices, color_rgba
+    return vertices, indices, color_rgba, uvs
 
 
 def get_shadow_objects(exclude):

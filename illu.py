@@ -32,12 +32,12 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
     #Creation du modele        
-    vertices, indices, colors = build_model(obj)
+    vertices, indices, colors, uvs = build_model(obj)
     
     #Shadow Buffer
     shadow_objs = get_shadow_objects(exclude = obj)
     if len(shadow_objs) > 0:
-        vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs) 
+        vertices_shadow, indices_shadow, shadow_colors, uvs = build_model(shadow_objs) 
         bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow) 
         bgl_filter_sss(shadow_buffer, samples = 50, radius = 50) #FIX améliorer la diffusion des ombres
     
@@ -69,6 +69,9 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
     else:             
         copy_buffer(shadow_buffer, base_buffer)
 
+    #Bake
+    bake_to_texture(base_buffer, vertices, indices, uvs)
+
     #Lecture du buffer    
     with base_buffer.bind():        
         buffer = bgl.Buffer(bgl.GL_FLOAT, dim_x * dim_y * 4)        
@@ -83,6 +86,8 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
     buffer_to_image( image_name, buffer )
     #print((time.time() - T)*1000)
 
+def bake_to_texture(offscreen, vertices, indices, uvs):
+    print ("bake")
 
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
     vertices_shadow, indices_shadow, light, shadow_size, soft_shadow):
