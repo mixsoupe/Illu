@@ -87,7 +87,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
     #print((time.time() - T)*1000)
 
 def bake_to_texture(offscreen, vertices, indices, uvs):
-    print ("bake")
+    print ("")
 
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
     vertices_shadow, indices_shadow, light, shadow_size, soft_shadow):

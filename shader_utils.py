@@ -137,6 +137,7 @@ def build_model(objects):
         bm.from_mesh(mesh)
         obj = o
 
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
     bm.to_mesh(mesh)
     bm.free()
 
@@ -159,6 +160,13 @@ def build_model(objects):
         "normal", np.reshape(normales, vlen * 3))
 
     uvs = np.empty((vlen, 3), 'f')
+    #UVS
+    for uv_layer in mesh.uv_layers:
+        if uv_layer.active_render:
+            print (uv_layer)
+            break
+        
+    # print (mesh.uv_layers)
 
 
     dim_x, dim_y =  get_resolution()
