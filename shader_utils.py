@@ -120,7 +120,7 @@ def calc_proj_matrix(fov = 50, ortho = 0, clip_start = 6, clip_end = 100, dim_x 
     return Matrix(mat)
 
 
-def build_model(objects):
+def build_model(objects, get_uv = False):
     camera = bpy.context.scene.camera
     depsgraph = bpy.context.evaluated_depsgraph_get()
 
@@ -158,30 +158,34 @@ def build_model(objects):
     normales = np.empty((vlen, 3), 'f')
     mesh.vertices.foreach_get(
         "normal", np.reshape(normales, vlen * 3))
-
-    uvs = np.empty((vlen, 3), 'f')
     
-    #BAKE UVS
-    # uvs = coordonnée de chaque uv point
-    # uv_indices = les index des uv point pour chaque loop
-    # uv_vertices = les coordonnées dans l'espace caméra du vertex correspondant à l'uv point
+    if get_uv:
+        #BAKE UVS
+        # uvs = coordonnée de chaque uv point
+        # uv_indices = les index des uv point pour chaque loop
+        # uv_vertices = l'indice du vertex correspondant à l'uv
 
-    for uv_layer in mesh.uv_layers:
-        if uv_layer.active_render:
-            uvlen = tlen * 3
-            uvs = np.empty((uvlen, 2), 'f')
-            uv_layer.data.foreach_get(
-                "uv", np.reshape(uvs, uvlen * 2))
+        #FIX convert to numpy
+        uvs = []
+        uv_indices = []
+        uv_vertices = []
 
-            break
-    
+        for uv_layer in mesh.uv_layers:
+            if uv_layer.active_render:
+                break
 
-    #TEST
-    for face in mesh.polygons:
-        for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
-            uv_coords = mesh.uv_layers.active.data[loop_idx].uv
-            #print("face idx: %i, vert idx: %i, uvs: %f, %f" % (face.index, vert_idx, uv_coords.x, uv_coords.y))
-     
+        for face in mesh.polygons:        
+            for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
+                uv_coords = uv_layer.data[loop_idx].uv
+                uvs.append(uv_coords)
+                uv_vertices.append(vert_idx)
+            uv_indices.append(list(face.loop_indices))
+            
+        uvs = np.asarray(uvs)
+        
+        uv_indices = np.asarray(uv_indices)
+        uv_vertices = np.asarray(uv_vertices) 
+        print (uv_indices)
 
     dim_x, dim_y =  get_resolution()
 
@@ -218,7 +222,10 @@ def build_model(objects):
     #Nettoyage
     bpy.data.meshes.remove(mesh)
     
-    return vertices, indices, color_rgba, uvs
+    if get_uv:
+        return vertices, indices, color_rgba, uvs, uv_indices, uv_vertices
+    else:
+        return vertices, indices, color_rgba
 
 
 def get_shadow_objects(exclude):
