@@ -160,14 +160,28 @@ def build_model(objects):
         "normal", np.reshape(normales, vlen * 3))
 
     uvs = np.empty((vlen, 3), 'f')
-    #UVS
+    
+    #BAKE UVS
+    # uvs = coordonnée de chaque uv point
+    # uv_indices = les index des uv point pour chaque loop
+    # uv_vertices = les coordonnées dans l'espace caméra du vertex correspondant à l'uv point
+
     for uv_layer in mesh.uv_layers:
         if uv_layer.active_render:
-            print (uv_layer)
-            break
-        
-    # print (mesh.uv_layers)
+            uvlen = tlen * 3
+            uvs = np.empty((uvlen, 2), 'f')
+            uv_layer.data.foreach_get(
+                "uv", np.reshape(uvs, uvlen * 2))
 
+            break
+    
+
+    #TEST
+    for face in mesh.polygons:
+        for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
+            uv_coords = mesh.uv_layers.active.data[loop_idx].uv
+            #print("face idx: %i, vert idx: %i, uvs: %f, %f" % (face.index, vert_idx, uv_coords.x, uv_coords.y))
+     
 
     dim_x, dim_y =  get_resolution()
 
