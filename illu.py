@@ -32,7 +32,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
     #Creation du modele        
-    vertices, indices, colors, uvs, uv_indices, uv_vertices = build_model(obj, get_uv = True)
+    vertices, indices, colors, uvs, uv_indices, loop_indices = build_model(obj, get_uv = True)
     
     #Shadow Buffer
     shadow_objs = get_shadow_objects(exclude = obj)
@@ -70,7 +70,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
         copy_buffer(shadow_buffer, base_buffer)
 
     #Bake
-    bake_to_texture(base_buffer, vertices, uvs, uv_indices, uv_vertices)
+    bake_to_texture(base_buffer, vertices, uvs, uv_indices, loop_indices)
 
     #Lecture du buffer    
     with base_buffer.bind():        
@@ -86,27 +86,52 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
     buffer_to_image( image_name, buffer )
     #print((time.time() - T)*1000)
 
-def bake_to_texture(offscreen, vertices, uvs, uv_indices, uv_vertices):
+def bake_to_texture(offscreen_A, vertices, uvs, uv_indices, loop_indices):
     res = 2048
-    offscreen_B = gpu.types.GPUOffScreen(res, res)
+    offscreen_B = gpu.types.GPUOffScreen(2048, 2048)
+   
+    uvs = uvs * res    
+    uvs = uvs.tolist() #FIX Pourquoi ça ne marche pas avec numpy ?
 
     #Get vertex 2D coords
-    vertices2D = ""
+    loops = np.take(vertices, loop_indices, axis=0)
+    #loops = np.delete(loops, -1, axis=1)
+    
+    #loops = loops.tolist()
+    #loops = [[1.0, -1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    
+    camera = bpy.context.scene.camera
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    
+    view_matrix = camera.matrix_world.inverted()
+    projection_matrix = camera.calc_matrix_camera(
+        depsgraph, x=res, y=res)
+
+    camera_matrix = projection_matrix @ view_matrix
 
     shader = compile_shader("bake.vert", "bake.frag")                        
-    
+       
     batch = batch_for_shader(
         shader, 'TRIS',
         {
             "pos": uvs,
-            #"texCoord": vertices2D,
+            "texCoord": loops,
         },
         indices = uv_indices
     )
 
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_projection_matrix(projection_matrix_2d())
 
+    with offscreen_B.bind():
+        bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
+        shader.uniform_float("CameraMatrix", camera_matrix)
+        shader.uniform_int("Sampler", 0)        
+        shader.bind()
+        batch.draw(shader)
 
-
+    copy_buffer(offscreen_B, offscreen_A)
 
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
     vertices_shadow, indices_shadow, light, shadow_size, soft_shadow):

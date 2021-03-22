@@ -160,7 +160,6 @@ def build_model(objects, get_uv = False):
         "normal", np.reshape(normales, vlen * 3))
     
     if get_uv:
-        #BAKE UVS
         # uvs = coordonnée de chaque uv point
         # uv_indices = les index des uv point pour chaque loop
         # uv_vertices = l'indice du vertex correspondant à l'uv
@@ -168,7 +167,7 @@ def build_model(objects, get_uv = False):
         #FIX convert to numpy
         uvs = []
         uv_indices = []
-        uv_vertices = []
+        loop_indices = []
 
         for uv_layer in mesh.uv_layers:
             if uv_layer.active_render:
@@ -177,15 +176,14 @@ def build_model(objects, get_uv = False):
         for face in mesh.polygons:        
             for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
                 uv_coords = uv_layer.data[loop_idx].uv
-                uvs.append(uv_coords)
-                uv_vertices.append(vert_idx)
+                uvs.append(uv_coords)                
+                loop_indices.append(vert_idx)
             uv_indices.append(list(face.loop_indices))
-            
+
+          
         uvs = np.asarray(uvs)
-        
         uv_indices = np.asarray(uv_indices)
-        uv_vertices = np.asarray(uv_vertices) 
-        print (uv_indices)
+        loop_indices = np.asarray(loop_indices) 
 
     dim_x, dim_y =  get_resolution()
 
@@ -223,7 +221,7 @@ def build_model(objects, get_uv = False):
     bpy.data.meshes.remove(mesh)
     
     if get_uv:
-        return vertices, indices, color_rgba, uvs, uv_indices, uv_vertices
+        return vertices, indices, color_rgba, uvs, uv_indices, loop_indices
     else:
         return vertices, indices, color_rgba
 
