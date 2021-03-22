@@ -87,9 +87,22 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
     #print((time.time() - T)*1000)
 
 def bake_to_texture(offscreen, vertices, uvs, uv_indices, uv_vertices):
-    print (uvs)
+    res = 2048
+    offscreen_B = gpu.types.GPUOffScreen(res, res)
 
+    #Get vertex 2D coords
+    vertices2D = ""
 
+    shader = compile_shader("bake.vert", "bake.frag")                        
+    
+    batch = batch_for_shader(
+        shader, 'TRIS',
+        {
+            "pos": uvs,
+            #"texCoord": vertices2D,
+        },
+        indices = uv_indices
+    )
 
 
 
