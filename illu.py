@@ -24,7 +24,7 @@ from mathutils import Matrix, Vector, Euler
 from . shader_utils import *
 
 #FIX Prévoir un overscan
-def generate_images(obj, image_name, light, scale, depth_precision, angle, shadow_size, soft_shadow, self_shading):
+def generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading):
     T = time.time()
     dim_x, dim_y =  get_resolution()
 
@@ -69,30 +69,33 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
 
     else:             
         copy_buffer(shadow_buffer, base_buffer)
-
-    #Bake
-    bake_buffer = gpu.types.GPUOffScreen(2048, 2048)
-    bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices, dim_x, dim_y)
-    dim_x = 2048
-    dim_y = 2048
+    
+    #Bake to texture
+    bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)
+    bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices)
+    bgl_filter_expand(bake_buffer)
 
     #Lecture du buffer    
     with bake_buffer.bind():        
-        buffer = bgl.Buffer(bgl.GL_FLOAT, dim_x * dim_y * 4)        
+        buffer = bgl.Buffer(bgl.GL_FLOAT, texture_size * texture_size * 4)        
         bgl.glReadBuffer(bgl.GL_BACK)        
-        bgl.glReadPixels(0, 0, dim_x, dim_y, bgl.GL_RGBA, bgl.GL_FLOAT, buffer)
+        bgl.glReadPixels(0, 0, texture_size, texture_size, bgl.GL_RGBA, bgl.GL_FLOAT, buffer)
     
     #Suppression des buffers
     shadow_buffer.free()
     base_buffer.free()
+    bake_buffer.free()
     
     #Enregistrement des images
-    buffer_to_image( image_name, buffer, dim_x, dim_y)
+    buffer_to_image( image_name, buffer, texture_size, texture_size)
     #print((time.time() - T)*1000)
 
-def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_indices, dim_x, dim_y):
-    res = 2048
-   
+
+
+
+def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_indices):
+    #res = texture_size
+    dim_x, dim_y =  get_resolution()
     uvs = uvs * (dim_x, dim_y)  
     uvs = uvs.tolist() #FIX Pourquoi ça ne marche pas avec numpy ?
 
@@ -146,8 +149,6 @@ def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_in
         shader.uniform_int("Sampler", 0)        
         shader.bind()
         batch.draw(shader)
-
-    #copy_buffer(offscreen_B, offscreen_A)
 
 
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
@@ -529,3 +530,26 @@ def bgl_filter_line(offscreen_A):
 
     copy_buffer(offscreen_B, offscreen_A)
 
+    offscreen_B.free()
+
+
+def bgl_filter_expand(offscreen_A):     
+    dim_x, dim_y =  get_resolution()
+    offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
+            
+    shader = compile_shader("image2d.vert", "expand.frag")                        
+    batch = batch2d(shader)
+
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_projection_matrix(projection_matrix_2d())
+    
+    with offscreen_B.bind():                   
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            shader.bind()
+            shader.uniform_int("Sampler", 0)
+            batch.draw(shader)
+
+    copy_buffer(offscreen_B, offscreen_A)
+    
+    offscreen_B.free()

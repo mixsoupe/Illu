@@ -100,6 +100,14 @@ class ILLUNodeProperties(bpy.types.PropertyGroup):
         name = "Soft Shadow",
         default = 1.0,
         )
+    texture_size: bpy.props.EnumProperty(
+        name="Texture Size",
+        items=[ ('1024', '1024', ""),
+                ('2048', '2048', ""),
+                ('4096', '4096', ""),
+               ],
+        default = '2048',
+        )
     shadow_size: bpy.props.EnumProperty(
         name="Shadow Size",
         items=[ ('1024', '1024', ""),
@@ -145,8 +153,9 @@ class ILLU_PT_node_ui(bpy.types.Panel):
         layout.prop_search(illu, "light", bpy.data, "objects")
         layout.prop(illu, "scale")
         layout.prop(illu, "depth_precision")
-        layout.prop(illu, "angle")        
+        layout.prop(illu, "angle")               
         layout.prop(illu, "soft_shadow")
+        layout.prop(illu, "texture_size") 
         layout.prop(illu, "shadow_size")
         layout.prop(illu, "self_shading")        
         layout.operator("illu.update")
@@ -247,11 +256,12 @@ def update_image(illu):
     scale = illu.scale
     depth_precision = illu.depth_precision
     angle = illu.angle
+    texture_size = int(illu.texture_size)
     shadow_size = int(illu.shadow_size)
     soft_shadow = illu.soft_shadow
     self_shading = illu.self_shading    
 
-    generate_images(obj, image_name, light, scale, depth_precision, angle, shadow_size, soft_shadow, self_shading)
+    generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading)
 
 def update_all():
     
