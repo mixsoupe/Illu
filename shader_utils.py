@@ -70,8 +70,7 @@ def np_matrix_multiplication(matrix, coords):
     
     return coords
 
-def buffer_to_image(image_name, buffer):
-    dim_x, dim_y =  get_resolution()
+def buffer_to_image(image_name, buffer, dim_x, dim_y):
     
     if not image_name in bpy.data.images:
         bpy.data.images.new(image_name, dim_x, dim_y)

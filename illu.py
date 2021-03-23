@@ -18,6 +18,7 @@ import mathutils
 import bgl
 import gpu
 import time
+import bpy_extras
 from mathutils import Matrix, Vector, Euler
 
 from . shader_utils import *
@@ -70,10 +71,13 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
         copy_buffer(shadow_buffer, base_buffer)
 
     #Bake
-    bake_to_texture(base_buffer, vertices, uvs, uv_indices, loop_indices)
+    bake_buffer = gpu.types.GPUOffScreen(2048, 2048)
+    bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices, dim_x, dim_y)
+    dim_x = 2048
+    dim_y = 2048
 
     #Lecture du buffer    
-    with base_buffer.bind():        
+    with bake_buffer.bind():        
         buffer = bgl.Buffer(bgl.GL_FLOAT, dim_x * dim_y * 4)        
         bgl.glReadBuffer(bgl.GL_BACK)        
         bgl.glReadPixels(0, 0, dim_x, dim_y, bgl.GL_RGBA, bgl.GL_FLOAT, buffer)
@@ -83,39 +87,51 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, shado
     base_buffer.free()
     
     #Enregistrement des images
-    buffer_to_image( image_name, buffer )
+    buffer_to_image( image_name, buffer, dim_x, dim_y)
     #print((time.time() - T)*1000)
 
-def bake_to_texture(offscreen_A, vertices, uvs, uv_indices, loop_indices):
+def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_indices, dim_x, dim_y):
     res = 2048
-    offscreen_B = gpu.types.GPUOffScreen(2048, 2048)
    
-    uvs = uvs * res    
+    uvs = uvs * (dim_x, dim_y)  
     uvs = uvs.tolist() #FIX Pourquoi ça ne marche pas avec numpy ?
 
     #Get vertex 2D coords
     loops = np.take(vertices, loop_indices, axis=0)
-    #loops = np.delete(loops, -1, axis=1)
+
+    """
     
-    #loops = loops.tolist()
-    #loops = [[1.0, -1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
-    
-    camera = bpy.context.scene.camera
     depsgraph = bpy.context.evaluated_depsgraph_get()
     
     view_matrix = camera.matrix_world.inverted()
     projection_matrix = camera.calc_matrix_camera(
         depsgraph, x=res, y=res)
 
-    camera_matrix = projection_matrix @ view_matrix
+    MVP = projection_matrix @ view_matrix
+    
+    remap_matrix = Matrix.Diagonal((0.5, 0.5, 0.0))
+    remap_matrix = Matrix.Translation( (1.0, 1.0, 0.0) ) @ remap_matrix.to_4x4()
+    camera_matrix = remap_matrix @ MVP
+
+
+    test = np_matrix_multiplication(MVP, vertices)
+    test = camera_matrix @ Vector((-1,-1,0))
+    """
+    scene = bpy.context.scene
+    camera = bpy.context.scene.camera
+    coords = []
+    for co in loops: #FIX Améliorer, essayer de faire ça directement avec les matrices
+        co = Vector(co)
+        co_2d = bpy_extras.object_utils.world_to_camera_view(scene, camera, co)
+        coords.append(co_2d[:-1])
 
     shader = compile_shader("bake.vert", "bake.frag")                        
-       
+    
     batch = batch_for_shader(
         shader, 'TRIS',
         {
             "pos": uvs,
-            "texCoord": loops,
+            "texCoord": coords,
         },
         indices = uv_indices
     )
@@ -126,12 +142,13 @@ def bake_to_texture(offscreen_A, vertices, uvs, uv_indices, loop_indices):
     with offscreen_B.bind():
         bgl.glActiveTexture(bgl.GL_TEXTURE0)            
         bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
-        shader.uniform_float("CameraMatrix", camera_matrix)
+        #shader.uniform_float("CameraMatrix", camera_matrix)
         shader.uniform_int("Sampler", 0)        
         shader.bind()
         batch.draw(shader)
 
-    copy_buffer(offscreen_B, offscreen_A)
+    #copy_buffer(offscreen_B, offscreen_A)
+
 
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
     vertices_shadow, indices_shadow, light, shadow_size, soft_shadow):
