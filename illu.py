@@ -26,6 +26,8 @@ from . shader_utils import *
 #FIX Prévoir un overscan
 def generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading):
     T = time.time()
+    global dim_x
+    global dim_y
     dim_x, dim_y =  get_resolution()
 
     base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
@@ -94,8 +96,6 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
 
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
     vertices_shadow, indices_shadow, light, shadow_size, soft_shadow):
-    
-    dim_x, dim_y =  get_resolution()
 
     #CSM 
     """CREER 3 buffers"""
@@ -242,7 +242,6 @@ def bgl_shadow(shadow_buffer, vertices, indices, colors,
 
     
 def bgl_base_render(offscreen, vertices, indices, colors):
-    dim_x, dim_y =  get_resolution()
 
     camera = bpy.context.scene.camera
     depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -280,7 +279,6 @@ def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
     camera = bpy.context.scene.camera
     light_angle = get_light_angle(light, camera) - angle
 
-    dim_x, dim_y =  get_resolution()
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "decal.frag")                        
@@ -322,7 +320,6 @@ def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
 
 def bgl_filter_distance_field(offscreen_A):    
 
-    dim_x, dim_y =  get_resolution()
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
     
     shader_PRE = compile_shader("image2d.vert", "distance_field_pre.frag")
@@ -413,8 +410,6 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20):
     B = Z depth
     A = Alpha
     """
-    dim_x, dim_y =  get_resolution()
-
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
       
     shader = compile_shader("image2d.vert", "sss.frag")                        
@@ -450,7 +445,6 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20):
 
 
 def bgl_filter_line(offscreen_A):     
-    dim_x, dim_y =  get_resolution()
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "line.frag")                        
@@ -506,7 +500,6 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y):
 
 def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_indices):
     #res = texture_size
-    dim_x, dim_y =  get_resolution()
     uvs = uvs * (dim_x, dim_y)  
     uvs = uvs.tolist() #FIX Pourquoi ça ne marche pas avec numpy ?
 

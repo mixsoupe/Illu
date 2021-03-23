@@ -83,17 +83,26 @@ def buffer_to_image(image_name, buffer, dim_x, dim_y):
 def calc_proj_matrix(fov = 50, ortho = 0, clip_start = 6, clip_end = 100, dim_x = 2000, dim_y = 2000):
     #Calcul viewplane
     field = math.radians(fov)
-    viewfac = dim_x / dim_y #C'est plus compliqué que ça
-    
     if ortho == 0:
         pixsize = 2 * clip_start * math.tan(field / 2)  
     else:
         pixsize = ortho
 
-    left = -0.5 * pixsize
-    bottom = -0.5 * pixsize / viewfac
-    right =  0.5 * pixsize
-    top =  0.5 * pixsize / viewfac
+    if dim_x >= dim_y:
+        viewfac = dim_x / dim_y
+
+        left = -0.5 * pixsize
+        bottom = -0.5 * pixsize / viewfac
+        right =  0.5 * pixsize
+        top =  0.5 * pixsize / viewfac
+    
+    else:
+        viewfac = dim_y / dim_x
+
+        left = -0.5 * pixsize / viewfac
+        bottom = -0.5 * pixsize 
+        right =  0.5 * pixsize / viewfac
+        top =  0.5 * pixsize 
     
     #Matrix
     Xdelta = right - left
@@ -184,12 +193,7 @@ def build_model(objects, get_uv = False):
         uv_indices = np.asarray(uv_indices)
         loop_indices = np.asarray(loop_indices) 
 
-    dim_x, dim_y =  get_resolution()
-
-    camera_loc = camera.location
-    view_matrix = camera.matrix_world.inverted()
-    projection_matrix = camera.calc_matrix_camera(
-            depsgraph, x=dim_x, y=dim_y)    
+    camera_loc = camera.location  
 
     #Calcul et normalisation zdepth    
     distances = np.linalg.norm(vertices - camera_loc, ord=2, axis=1.)
