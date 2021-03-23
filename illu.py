@@ -76,7 +76,6 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices)
     bgl_filter_expand(bake_buffer, texture_size, texture_size)
 
-
     #Lecture du buffer    
     with bake_buffer.bind():        
         buffer = bgl.Buffer(bgl.GL_FLOAT, texture_size * texture_size * 4)        
@@ -93,8 +92,6 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     #print((time.time() - T)*1000)
 
 
-
-
 def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_indices):
     #res = texture_size
     dim_x, dim_y =  get_resolution()
@@ -104,24 +101,6 @@ def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_in
     #Get vertex 2D coords
     loops = np.take(vertices, loop_indices, axis=0)
 
-    """
-    
-    depsgraph = bpy.context.evaluated_depsgraph_get()
-    
-    view_matrix = camera.matrix_world.inverted()
-    projection_matrix = camera.calc_matrix_camera(
-        depsgraph, x=res, y=res)
-
-    MVP = projection_matrix @ view_matrix
-    
-    remap_matrix = Matrix.Diagonal((0.5, 0.5, 0.0))
-    remap_matrix = Matrix.Translation( (1.0, 1.0, 0.0) ) @ remap_matrix.to_4x4()
-    camera_matrix = remap_matrix @ MVP
-
-
-    test = np_matrix_multiplication(MVP, vertices)
-    test = camera_matrix @ Vector((-1,-1,0))
-    """
     scene = bpy.context.scene
     camera = bpy.context.scene.camera
     coords = []
@@ -130,6 +109,22 @@ def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_in
         co_2d = bpy_extras.object_utils.world_to_camera_view(scene, camera, co)
         coords.append(co_2d[:-1])
 
+    ##########
+    """
+    print (co_2d)
+
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    
+    view_matrix = camera.matrix_world.inverted()
+    projection_matrix = camera.calc_matrix_camera(
+        depsgraph, x=dim_x, y=dim_y)
+
+    MVP = projection_matrix @ view_matrix
+    test = MVP @ co    
+    print (test)
+    """
+    ##########
+    
     shader = compile_shader("bake.vert", "bake.frag")                        
     
     batch = batch_for_shader(
@@ -540,8 +535,6 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y):
             
     shader = compile_shader("image2d.vert", "expand.frag")                        
     batch = batch2d(shader)
-
-    
 
     with gpu.matrix.push_pop():
         gpu.matrix.load_projection_matrix(projection_matrix_2d())
