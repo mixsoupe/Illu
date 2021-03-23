@@ -351,4 +351,13 @@ def get_light_angle(light, camera):
 
     return math.degrees(angle)
 
+def change_camera_matrix(camera, dim_x, dim_y):
+    fov = math.degrees(camera.data.angle * 1.2)
+    clip_start = camera.data.clip_start
+    clip_end = camera.data.clip_end
+
+    projection_matrix = calc_proj_matrix(fov = fov, clip_start = clip_start, 
+            clip_end = clip_end, dim_x = dim_x, dim_y = dim_y)
+
+    return projection_matrix
     

@@ -103,11 +103,9 @@ def bgl_shadow(shadow_buffer, vertices, indices, colors,
     shadowmap_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
     #Camera matrix
-    camera = bpy.context.scene.camera
-    depsgraph = bpy.context.evaluated_depsgraph_get()    
+    camera = bpy.context.scene.camera 
     view_matrix = camera.matrix_world.inverted()
-    projection_matrix = camera.calc_matrix_camera(
-        depsgraph, x=dim_x, y=dim_y)
+    projection_matrix = change_camera_matrix(camera, dim_x, dim_y)
     
     MVP = projection_matrix @ view_matrix
 
@@ -250,8 +248,7 @@ def bgl_base_render(offscreen, vertices, indices, colors):
     depsgraph = bpy.context.evaluated_depsgraph_get()
     
     view_matrix = camera.matrix_world.inverted()
-    projection_matrix = camera.calc_matrix_camera(
-        depsgraph, x=dim_x, y=dim_y)
+    projection_matrix = change_camera_matrix(camera, dim_x, dim_y)
 
     shader =  compile_shader("base.vert", "base.frag")
     batch = batch_for_shader(shader, 'TRIS', {"pos": vertices, "color": colors}, indices=indices)  
@@ -516,32 +513,18 @@ def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_in
     #Get vertex 2D coords
     loops = np.take(vertices, loop_indices, axis=0)
 
-    scene = bpy.context.scene
     camera = bpy.context.scene.camera
-    coords = []
-    for co in loops: #FIX Améliorer, essayer de faire ça directement avec les matrices
-        co = Vector(co)
-        co_2d = bpy_extras.object_utils.world_to_camera_view(scene, camera, co)
-        coords.append(co_2d[:-1])
-
-    ########## TEST MATRIX
-    print (co_2d)
-
     depsgraph = bpy.context.evaluated_depsgraph_get()
     
     view_matrix = camera.matrix_world.inverted()
-    projection_matrix = camera.calc_matrix_camera(
-        depsgraph, x=dim_x, y=dim_y)
-    
-    ##########
+    projection_matrix = change_camera_matrix(camera, dim_x, dim_y)
     
     shader = compile_shader("bake.vert", "bake.frag")                        
-    
     batch = batch_for_shader(
         shader, 'TRIS',
         {
             "pos": uvs,
-            "texCoord": coords,
+            "texCoord": loops,
         },
         indices = uv_indices
     )
@@ -552,8 +535,8 @@ def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_in
     with offscreen_B.bind():
         bgl.glActiveTexture(bgl.GL_TEXTURE0)            
         bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
-        #shader.uniform_float("modelMatrix", view_matrix)
-        #shader.uniform_float("viewProjectionMatrix", projection_matrix)
+        shader.uniform_float("view_matrix", view_matrix)
+        shader.uniform_float("projection_matrix", projection_matrix)
         shader.uniform_int("Sampler", 0)        
         shader.bind()
         batch.draw(shader)
