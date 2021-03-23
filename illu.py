@@ -45,7 +45,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     #Base buffer  
     if self_shading:
         #Base render
-        bgl_base_render(b   ase_buffer, vertices, indices, colors)
+        bgl_base_render(base_buffer, vertices, indices, colors)
         bgl_filter_expand(base_buffer, dim_x, dim_y)      
         bgl_filter_sss(base_buffer, samples = 50, radius = 50)
         copy_buffer(base_buffer, base_buffer_copy)
