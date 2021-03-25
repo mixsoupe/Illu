@@ -350,13 +350,13 @@ def bgl_filter_distance_field(offscreen_A):
             shader_PRE.uniform_int("Sampler", 0)
             batch_PRE.draw(shader_PRE)
     
-    div = 10000
-    step = 2
-    start = 20
+    div = 800000
+    step = 1  
+    start = 1
     #LOOP HORIZONTAL
     beta = start / div
     offset = (step / dim_x, 0)
-    for i in range(500):
+    for i in range(200):
         beta += 1 / div
         with offscreen_A.bind():                   
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
