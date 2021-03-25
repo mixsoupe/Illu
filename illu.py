@@ -29,7 +29,15 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     global dim_x
     global dim_y
     dim_x, dim_y =  get_resolution()
-
+    ratio = dim_x / dim_y
+    
+    if ratio > 1:        
+        dim_x = texture_size
+        dim_y = int(dim_x / ratio)
+    else:
+        dim_y = texture_size
+        dim_x = int(dim_y * ratio)
+    
     base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     base_buffer_copy = gpu.types.GPUOffScreen(dim_x, dim_y)
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
@@ -50,7 +58,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_base_render(base_buffer, vertices, indices, colors)
         bgl_filter_expand(base_buffer, dim_x, dim_y)      
         bgl_filter_sss(base_buffer, samples = 50, radius = 50)
-        copy_buffer(base_buffer, base_buffer_copy)
+        copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
 
         #Decal        
         bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
@@ -63,15 +71,15 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_filter_line(base_buffer)
 
         #Merge
-        merge_buffers(base_buffer, base_buffer_copy, "merge_g1")
+        merge_buffers(base_buffer, base_buffer_copy, "merge_g1", dim_x, dim_y)
         if len(shadow_objs) > 0:
-            merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1")
+            merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1", dim_x, dim_y)
 
     elif len(shadow_objs) == 0:            
             bgl_base_render(base_buffer, vertices, indices, colors)
 
     else:             
-        copy_buffer(shadow_buffer, base_buffer)
+        copy_buffer(shadow_buffer, base_buffer, dim_x, dim_y)
     
     #Bake to texture
     bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)
@@ -123,7 +131,7 @@ def bgl_shadow(shadow_buffer, vertices, indices, colors,
     batch = batch_for_shader(shader, 'TRIS', {"pos": vertices, "color": colors}, indices=indices)
     
     shader_post = compile_shader("image2d.vert", "shadow_post.frag")                        
-    batch_post = batch2d(shader_post)
+    batch_post = batch2d(shader_post,dim_x, dim_y)
 
     #Soft shadow samples
     rotation_matrices = soft_shadow_pattern(soft_shadow)
@@ -226,7 +234,7 @@ def bgl_shadow(shadow_buffer, vertices, indices, colors,
 
         with shadow_buffer.bind():
             with gpu.matrix.push_pop():
-                gpu.matrix.load_projection_matrix(projection_matrix_2d())                  
+                gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))                  
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
                 bgl.glBindTexture(bgl.GL_TEXTURE_2D, shadow_buffer.color_texture)
                 bgl.glActiveTexture(bgl.GL_TEXTURE1)            
@@ -282,10 +290,10 @@ def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "decal.frag")                        
-    batch = batch2d(shader)
+    batch = batch2d(shader, dim_x, dim_y)
 
     with gpu.matrix.push_pop():
-        gpu.matrix.load_projection_matrix(projection_matrix_2d())
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
     
     rad = math.radians(light_angle)
     with offscreen_B.bind():                   
@@ -323,16 +331,16 @@ def bgl_filter_distance_field(offscreen_A):
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
     
     shader_PRE = compile_shader("image2d.vert", "distance_field_pre.frag")
-    batch_PRE = batch2d(shader_PRE)
+    batch_PRE = batch2d(shader_PRE, dim_x, dim_y)
 
     shader = compile_shader("image2d.vert", "distance_field.frag")                    
-    batch = batch2d(shader)
+    batch = batch2d(shader, dim_x, dim_y)
     
     shader_POST = compile_shader("image2d.vert", "distance_field_post.frag")
-    batch_POST = batch2d(shader_POST)
+    batch_POST = batch2d(shader_POST, dim_x, dim_y)
     
     with gpu.matrix.push_pop():
-        gpu.matrix.load_projection_matrix(projection_matrix_2d())
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
 
     #PRE
     with offscreen_B.bind():                   
@@ -413,10 +421,10 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20):
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
       
     shader = compile_shader("image2d.vert", "sss.frag")                        
-    batch = batch2d(shader)
+    batch = batch2d(shader, dim_x, dim_y)
     
     with gpu.matrix.push_pop():
-            gpu.matrix.load_projection_matrix(projection_matrix_2d())
+            gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
 
     for i in range (samples):
         radius -= radius/samples
@@ -448,10 +456,10 @@ def bgl_filter_line(offscreen_A):
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "line.frag")                        
-    batch = batch2d(shader)
+    batch = batch2d(shader, dim_x, dim_y)
 
     with gpu.matrix.push_pop():
-        gpu.matrix.load_projection_matrix(projection_matrix_2d())
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
     
     with offscreen_B.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
@@ -460,7 +468,7 @@ def bgl_filter_line(offscreen_A):
             shader.uniform_int("Sampler", 0)
             batch.draw(shader)
 
-    copy_buffer(offscreen_B, offscreen_A)
+    copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
 
     offscreen_B.free()
 
@@ -469,10 +477,10 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y):
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "expand.frag")                        
-    batch = batch2d(shader)
+    batch = batch2d(shader, dim_x, dim_y)
 
     with gpu.matrix.push_pop():
-        gpu.matrix.load_projection_matrix(projection_matrix_2d())
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
     
     for i in range (3):
         step = (1/dim_x, 0)
@@ -493,7 +501,7 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y):
                 shader.uniform_float("step", step)
                 batch.draw(shader)
 
-    #copy_buffer(offscreen_B, offscreen_A)
+    #copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
     
     offscreen_B.free()
 
@@ -523,7 +531,7 @@ def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_in
     )
 
     with gpu.matrix.push_pop():
-        gpu.matrix.load_projection_matrix(projection_matrix_2d())
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
 
     with offscreen_B.bind():
         bgl.glActiveTexture(bgl.GL_TEXTURE0)            

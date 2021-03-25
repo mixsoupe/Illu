@@ -35,6 +35,7 @@ def load_shader(file):
 def get_resolution():
     dim_x = bpy.context.scene.render.resolution_x
     dim_y = bpy.context.scene.render.resolution_y
+    
     return (dim_x, dim_y)
 
 def compile_shader(vertex, fragment):
@@ -43,8 +44,8 @@ def compile_shader(vertex, fragment):
     shader = gpu.types.GPUShader(vertex_shader, fragment_shader)
     return (shader)
 
-def batch2d(shader):
-    dim_x, dim_y =  get_resolution()
+def batch2d(shader, dim_x, dim_y):
+    #dim_x, dim_y =  get_resolution()
     batch = batch_for_shader(
         shader, 'TRI_FAN',
         {
@@ -54,8 +55,8 @@ def batch2d(shader):
     )
     return(batch)
 
-def projection_matrix_2d():
-    dim_x, dim_y =  get_resolution()
+def projection_matrix_2d(dim_x, dim_y):
+    #dim_x, dim_y =  get_resolution()
     projection_matrix = Matrix.Diagonal( (2.0 / dim_x, 2.0 / dim_y, 1.0) )
     projection_matrix = Matrix.Translation( (-1.0, -1.0, 0.0) ) @ projection_matrix.to_4x4()
     return(projection_matrix)
@@ -89,20 +90,17 @@ def calc_proj_matrix(fov = 50, ortho = 0, clip_start = 6, clip_end = 100, dim_x 
         pixsize = ortho
 
     if dim_x >= dim_y:
-        viewfac = dim_x / dim_y
+        viewfac_x = dim_x / dim_y
+        viewfac_y = 1
 
-        left = -0.5 * pixsize
-        bottom = -0.5 * pixsize / viewfac
-        right =  0.5 * pixsize
-        top =  0.5 * pixsize / viewfac
-    
-    else:
-        viewfac = dim_y / dim_x
+    else:        
+        viewfac_x = 1
+        viewfac_y = dim_y / dim_x
 
-        left = -0.5 * pixsize / viewfac
-        bottom = -0.5 * pixsize 
-        right =  0.5 * pixsize / viewfac
-        top =  0.5 * pixsize 
+    left = -0.5 * pixsize / viewfac_y
+    bottom = -0.5 * pixsize / viewfac_x
+    right =  0.5 * pixsize / viewfac_y
+    top =  0.5 * pixsize / viewfac_x
     
     #Matrix
     Xdelta = right - left
@@ -269,9 +267,9 @@ def calc_frustrum(view_matrix, vertices):
 
     return (size_x, size_y, size_z, clip_start, clip_end, offset_x, offset_y, offset_z)
 
-def copy_buffer(source, target):
+def copy_buffer(source, target, dim_x, dim_y):
     shader = compile_shader("image2d.vert", "copy_buffer.frag")
-    batch = batch2d(shader)
+    batch = batch2d(shader, dim_x, dim_y)
 
     with target.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
@@ -280,15 +278,15 @@ def copy_buffer(source, target):
             shader.uniform_int("Sampler", 0)
             batch.draw(shader)
 
-def merge_buffers(offscreen_A, offscreen_B, operation):
-    dim_x, dim_y =  get_resolution()
+def merge_buffers(offscreen_A, offscreen_B, operation, dim_x, dim_y):
+    #dim_x, dim_y =  get_resolution()
     offscreen_C = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "{}.frag".format(operation))                        
-    batch = batch2d(shader)
+    batch = batch2d(shader,dim_x, dim_y)
 
     with gpu.matrix.push_pop():
-        gpu.matrix.load_projection_matrix(projection_matrix_2d())
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
     
     with offscreen_C.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
@@ -300,7 +298,7 @@ def merge_buffers(offscreen_A, offscreen_B, operation):
             shader.uniform_int("Sampler1", 1)              
             batch.draw(shader)
 
-    copy_buffer(offscreen_C, offscreen_A)
+    copy_buffer(offscreen_C, offscreen_A, dim_x, dim_y)
     offscreen_C.free()
 
 
