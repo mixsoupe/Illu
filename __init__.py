@@ -133,7 +133,7 @@ class ILLU_PT_node_ui(bpy.types.Panel):
     bl_idname = "ILLU_PT_node_ui"
     bl_space_type = "NODE_EDITOR"   
     bl_region_type = "UI"
-    bl_category = "WorkFlow"
+    bl_category = "Illu"
     bl_context = "objectmode"
 
     @classmethod
@@ -166,7 +166,7 @@ class ILLU_PT_view3d_ui(bpy.types.Panel):
     bl_idname = "ILLU_PT_view3d_ui"
     bl_space_type = "VIEW_3D"   
     bl_region_type = "UI"
-    bl_category = "WorkFlow"
+    bl_category = "Illu"
 
     def draw(self, context):
         layout = self.layout
