@@ -30,9 +30,11 @@ void main()
     float west_pixel_remap = west_pixel.b + west_pixel.a/255;
 
     /* SDF */
+    float remap_beta = Beta * (1.5-this_pixel.g);
+    //remap_beta = Beta;
     float A = this_pixel_remap;                    
-    float e = Beta + east_pixel_remap;
-    float w = Beta + west_pixel_remap;
+    float e = remap_beta + east_pixel_remap;
+    float w = remap_beta + west_pixel_remap;
     float B = min(min(A, e), w);    
 
     /* Remap to 16bits */

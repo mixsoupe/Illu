@@ -65,8 +65,9 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_filter_sss(base_buffer, samples = 60, radius = 20)
 
         #Distance field buffer
-        bgl_filter_distance_field(base_buffer_copy)
-        
+        bgl_filter_distance_field(base_buffer_copy, scale)
+
+
         #Ajouter le trait
         bgl_filter_line(base_buffer)
 
@@ -326,7 +327,7 @@ def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
     offscreen_B.free()
             
 
-def bgl_filter_distance_field(offscreen_A):    
+def bgl_filter_distance_field(offscreen_A, scale):    
 
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
     
@@ -352,15 +353,14 @@ def bgl_filter_distance_field(offscreen_A):
     
     
     step = 1
-    start = 0
-    iteration = 400
-    div = 10000
+    div = 80 * scale
+    #iteration = int((math.sqrt(div))*0.75)
+    iteration = int(div/2)
 
     #LOOP HORIZONTAL
-    beta = start / div
-    offset = (step / dim_x, 0)
-    for i in range(int(iteration/2)):
-        beta += 1 / div
+    beta = 1 / div
+    offset = (step / dim_x, 0)    
+    for i in range(iteration):     
         with offscreen_A.bind():                   
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
                 bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
@@ -369,7 +369,6 @@ def bgl_filter_distance_field(offscreen_A):
                 shader.uniform_float("Beta", beta)
                 shader.uniform_float("Offset", offset)
                 batch.draw(shader)
-        beta += 1 / div
         with offscreen_B.bind():                   
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
                 bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
@@ -378,12 +377,10 @@ def bgl_filter_distance_field(offscreen_A):
                 shader.uniform_float("Beta", beta)
                 shader.uniform_float("Offset", offset)
                 batch.draw(shader)
-                
+               
     #LOOP VERTICAL
-    beta = start / div
     offset = (0, step / dim_y)     
-    for i in range(int(iteration/2)):
-        beta += 1 / div
+    for i in range(iteration):
         with offscreen_A.bind():                   
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
                 bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
@@ -392,7 +389,6 @@ def bgl_filter_distance_field(offscreen_A):
                 shader.uniform_float("Beta", beta)
                 shader.uniform_float("Offset", offset)
                 batch.draw(shader)
-        beta += 1 / div
         with offscreen_B.bind():                   
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
                 bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
@@ -401,8 +397,8 @@ def bgl_filter_distance_field(offscreen_A):
                 shader.uniform_float("Beta", beta)
                 shader.uniform_float("Offset", offset)
                 batch.draw(shader)
-    #POST
     
+    #POST    
     with offscreen_A.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
