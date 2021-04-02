@@ -66,13 +66,13 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
 
         #Distance field buffer
         bgl_filter_distance_field(base_buffer_copy, scale)
-
-
+        merge_buffers(base_buffer, base_buffer_copy, "merge_g1", dim_x, dim_y)  
+        
         #Ajouter le trait
         bgl_filter_line(base_buffer)
 
         #Merge
-        merge_buffers(base_buffer, base_buffer_copy, "merge_g1", dim_x, dim_y)
+             
         if len(shadow_objs) > 0:
             merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1", dim_x, dim_y)
 
@@ -398,7 +398,8 @@ def bgl_filter_distance_field(offscreen_A, scale):
                 shader.uniform_float("Offset", offset)
                 batch.draw(shader)
     
-    #POST    
+    #POST
+ 
     with offscreen_A.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
@@ -421,7 +422,6 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20):
       
     shader = compile_shader("image2d.vert", "sss.frag")                        
     batch = batch2d(shader, dim_x, dim_y)
-    
     with gpu.matrix.push_pop():
             gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
 

@@ -7,7 +7,7 @@ void main()
     vec4 color0 = texture(Sampler0, vTexCoord);
     vec4 color1 = texture(Sampler1, vTexCoord);
 
-    float r = color0.r * color1.r;
+    //float r = color0.r * color1.r;
 
     gl_FragColor = vec4(color0.r, color1.g, color0.b, color0.a);
 }

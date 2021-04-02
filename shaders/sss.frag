@@ -1,6 +1,6 @@
 in vec2 vTexCoord;
-uniform sampler2D Sampler;
 
+uniform sampler2D Sampler;
 uniform vec2 step;
 
 //generate noise
@@ -56,7 +56,6 @@ void main()
         // Accumulate:
         colorBlurred += w[i] * color;
     }
-        
     gl_FragColor = vec4(colorBlurred.x, colorBlurred.y, colorBase.b, colorBase.a);
 
 
