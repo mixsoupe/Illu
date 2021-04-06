@@ -20,28 +20,12 @@ void main()
         west_uv = vTexCoord;
     }
     
-    vec4 this_pixel = texture(Sampler, vTexCoord).rgba;
-    vec4 east_pixel = texture(Sampler, east_uv).rgba;
-    vec4 west_pixel = texture(Sampler, west_uv).rgba;  
-
-    /* Remap to 8bits */
-    float this_pixel_remap = this_pixel.b + this_pixel.a/255;
-    float east_pixel_remap = east_pixel.b + east_pixel.a/255;
-    float west_pixel_remap = west_pixel.b + west_pixel.a/255;
-
     /* SDF */
-    float remap_beta = Beta * (1.5-this_pixel.g);
-    //remap_beta = Beta;
-    float A = this_pixel_remap;                    
-    float e = remap_beta + east_pixel_remap;
-    float w = remap_beta + west_pixel_remap;
-    float B = min(min(A, e), w);    
+    float A = texture(Sampler, vTexCoord).a;                    
+    float e = Beta + texture(Sampler, east_uv).a;
+    float w = Beta + texture(Sampler, west_uv).a;
+    float B = min(min(A, e), w);  
 
-    /* Remap to 16bits */
-    float B_int = floor(B*255);
-    float B_decimale = B*255 - B_int;        
-    B_int /= 255; 
-    
-    gl_FragColor = vec4(this_pixel.r, this_pixel.g, B_int, B_decimale);
+    gl_FragColor = vec4(0.0, 0.0, 0.0, B);
 
 }
