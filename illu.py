@@ -346,72 +346,66 @@ def bgl_filter_distance_field(offscreen_A, scale):
 
     #PRE
     with offscreen_B.bind():                   
-            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
-            shader_PRE.bind()
-            shader_PRE.uniform_int("Sampler", 0)
-            batch_PRE.draw(shader_PRE)
+        bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+        shader_PRE.bind()
+        shader_PRE.uniform_int("Sampler", 0)
+        batch_PRE.draw(shader_PRE)
     
     
     step = 1
     div = 80 * scale
     #iteration = int((math.sqrt(div))*0.75)
-    iteration = int(div/2)
-
-    
-
+    iteration = int(div/2)   
     #LOOP HORIZONTAL
     beta = 1 / div
     offset = (step / dim_x, 0)    
-    for i in range(iteration):
-        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
-        bgl.glClearDepth(1000000);
-        bgl.glClearColor(0.0, 0.0, 0.0, 0.0);    
+    for i in range(iteration):        
         with offscreen_A.bind():
-                bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-                bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
-                shader.bind()
-                shader.uniform_int("Sampler", 0)
-                shader.uniform_float("Beta", beta)
-                shader.uniform_float("Offset", offset)
-                batch.draw(shader)
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
+            shader.bind()
+            shader.uniform_int("Sampler", 0)
+            shader.uniform_float("Beta", beta)
+            shader.uniform_float("Offset", offset)
+            batch.draw(shader)
         with offscreen_B.bind():                   
-                bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-                bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
-                shader.bind()
-                shader.uniform_int("Sampler", 0)
-                shader.uniform_float("Beta", beta)
-                shader.uniform_float("Offset", offset)
-                batch.draw(shader)
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            shader.bind()
+            shader.uniform_int("Sampler", 0)
+            shader.uniform_float("Beta", beta)
+            shader.uniform_float("Offset", offset)
+            batch.draw(shader)
                
     #LOOP VERTICAL
     offset = (0, step / dim_y)     
     for i in range(iteration):
         with offscreen_A.bind():                   
-                bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-                bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
-                shader.bind()
-                shader.uniform_int("Sampler", 0)
-                shader.uniform_float("Beta", beta)
-                shader.uniform_float("Offset", offset)
-                batch.draw(shader)
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
+            shader.bind()
+            shader.uniform_int("Sampler", 0)
+            shader.uniform_float("Beta", beta)
+            shader.uniform_float("Offset", offset)
+            batch.draw(shader)
         with offscreen_B.bind():                   
-                bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-                bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
-                shader.bind()
-                shader.uniform_int("Sampler", 0)
-                shader.uniform_float("Beta", beta)
-                shader.uniform_float("Offset", offset)
-                batch.draw(shader)
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            shader.bind()
+            shader.uniform_int("Sampler", 0)
+            shader.uniform_float("Beta", beta)
+            shader.uniform_float("Offset", offset)
+            batch.draw(shader)
     
     #POST
  
     with offscreen_A.bind():                   
-            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
-            shader_POST.bind()
-            shader_POST.uniform_int("Sampler", 0)
-            batch_POST.draw(shader_POST)
+        bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
+        shader_POST.bind()
+        shader_POST.uniform_int("Sampler", 0)
+        batch_POST.draw(shader_POST)
 
     offscreen_B.free()
 
