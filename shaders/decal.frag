@@ -17,9 +17,7 @@ void main()
     vec2 st = gl_FragCoord.xy;
     float rand = random(st);        
 
-    vec4 colorBase = texture(Sampler, vTexCoord).rgba;
-    float dist = 1 - colorBase.g;     
-    //float dist = colorBase.g;            
+    vec4 colorBase = texture(Sampler, vTexCoord).rgba;       
     
     int end = 0;        
     float value = 0.0;
@@ -31,10 +29,10 @@ void main()
                 
         vec2 direction = vec2(cos(rand_angle)/dim_x, sin(rand_angle)/dim_y);
         
-        float sample_a = texture(Sampler, vTexCoord + direction * dist * scale * i).a;
+        float sample_a = texture(Sampler, vTexCoord + direction * scale * i).a;
 
         float current_z = texture(Sampler, vTexCoord).b;
-        float sample_z = texture(Sampler, vTexCoord + direction * dist * scale * i).b;
+        float sample_z = texture(Sampler, vTexCoord + direction * scale * i).b;
         
         float delta_z = sample_z - current_z;
 

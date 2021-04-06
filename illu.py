@@ -60,14 +60,14 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_filter_sss(base_buffer, samples = 50, radius = 50)
         copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
 
-        #Decal        
-        bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
-        bgl_filter_sss(base_buffer, samples = 60, radius = 20)
-
         #Distance field buffer
         bgl_filter_distance_field(base_buffer_copy, scale)
         merge_buffers(base_buffer, base_buffer_copy, "merge_g1", dim_x, dim_y)  
-        
+
+        #Decal        
+        bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
+        bgl_filter_sss(base_buffer, samples = 60, radius = 20)
+               
         #Ajouter le trait
         bgl_filter_line(base_buffer)
 
@@ -357,11 +357,16 @@ def bgl_filter_distance_field(offscreen_A, scale):
     #iteration = int((math.sqrt(div))*0.75)
     iteration = int(div/2)
 
+    
+
     #LOOP HORIZONTAL
     beta = 1 / div
     offset = (step / dim_x, 0)    
-    for i in range(iteration):     
-        with offscreen_A.bind():                   
+    for i in range(iteration):
+        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
+        bgl.glClearDepth(1000000);
+        bgl.glClearColor(0.0, 0.0, 0.0, 0.0);    
+        with offscreen_A.bind():
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
                 bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
                 shader.bind()

@@ -23,7 +23,6 @@ void main()
     vec4 colorBase = texture(Sampler, vTexCoord).rgba;    
     vec2 colorM = texture(Sampler, vTexCoord).rg;
     float depthM = texture(Sampler, vTexCoord).b + texture(Sampler, vTexCoord).a;
-    float intensityM = 1.0 - texture(Sampler, vTexCoord).g;
 
     //float depthM = (gl_FragCoord.z / gl_FragCoord.w);
     
@@ -36,8 +35,9 @@ void main()
     //     step = sssStrength * gaussianWidth * pixelSize * dir
     // The closer the pixel, the stronger the effect needs to be, hence
     // the factor 1.0 / depthM.        
-    vec2 finalStep = texture(Sampler, vTexCoord).a * step * (intensityM + 0.05); // TODO / depthM;
     
+    vec2 finalStep = texture(Sampler, vTexCoord).a * step; // TODO / depthM;
+
     // Accumulate the other samples:
     for (int i = 0; i < 6; i++) {
         // Fetch color and depth for current sample:
