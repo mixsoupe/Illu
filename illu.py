@@ -50,7 +50,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     if len(shadow_objs) > 0:
         vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs) 
         bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow) 
-        bgl_filter_sss(shadow_buffer, samples = 50, radius = 50) #FIX améliorer la diffusion des ombres
+        
     
     #Base buffer  
     if self_shading:
@@ -65,23 +65,24 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         merge_buffers(base_buffer, base_buffer_copy, "merge_g1", dim_x, dim_y)  
 
         #Decal        
-        bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
-        bgl_filter_sss(base_buffer, samples = 60, radius = 20)
+        bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)     
                
-        #Ajouter le trait
-        bgl_filter_line(base_buffer)
-
-        #Merge
-             
+        #Merge Shadow             
         if len(shadow_objs) > 0:
             merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1", dim_x, dim_y)
+            
+        bgl_filter_sss(base_buffer, samples = 60, radius = 20, mask = True)
+        
+        #Ajouter le trait
+        bgl_filter_line(base_buffer)
 
     elif len(shadow_objs) == 0:            
             bgl_base_render(base_buffer, vertices, indices, colors)
 
     else:             
         copy_buffer(shadow_buffer, base_buffer, dim_x, dim_y)
-    
+        bgl_filter_sss(base_buffer, samples = int(10 * soft_shadow), radius = int(3 * soft_shadow))
+
     #Bake to texture
     bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)
     bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices)
@@ -415,7 +416,7 @@ def bgl_filter_distance_field(offscreen_A, scale):
     offscreen_B.free()
 
 
-def bgl_filter_sss(offscreen_A, samples = 60, radius = 20):
+def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False):
     """
     Flou en tenant compte de la couche de profondeur
     R = Valeur d'entrée
@@ -437,9 +438,10 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20):
         with offscreen_B.bind():                   
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
                 bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
-                shader.bind()
+                shader.bind()                
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_float("step", step)
+                shader.uniform_int("mask", mask)
                 batch.draw(shader)
                 step = (0 / dim_x * radius,1 / dim_y * radius)
                 
@@ -450,6 +452,7 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20):
                 shader.bind()
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_float("step", step)
+                shader.uniform_int("mask", mask)
                 batch.draw(shader)
 
     offscreen_B.free()
@@ -545,4 +548,5 @@ def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_in
         shader.uniform_int("Sampler", 0)        
         shader.bind()
         batch.draw(shader)
+
 

@@ -2,6 +2,7 @@ in vec2 vTexCoord;
 
 uniform sampler2D Sampler;
 uniform vec2 step;
+uniform int mask;
 
 //generate noise
 float random (vec2 st) {
@@ -47,7 +48,12 @@ void main()
         float intensity = texture(Sampler, offset).g;
         
         float correction = 12;
-        
+
+        if (mask == 1){
+            correction *= (1 + intensity - texture(Sampler, offset).a);
+        }
+
+
         // If the difference in depth is huge, we lerp color back to "colorM":
         float s = min(correction * abs(depthM - depth), 1.0);        
 
@@ -56,7 +62,6 @@ void main()
         // Accumulate:
         colorBlurred += w[i] * color;
     }
-    gl_FragColor = vec4(colorBlurred.x, colorBlurred.y, colorBase.b, colorBase.a);
-
+    gl_FragColor = vec4(colorBlurred.x, colorBase.g, colorBase.b, colorBase.a);
 
 }
