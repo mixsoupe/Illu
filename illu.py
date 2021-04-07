@@ -56,12 +56,13 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     if self_shading:
         #Base render
         bgl_base_render(base_buffer, vertices, indices, colors)
+        
         bgl_filter_expand(base_buffer, dim_x, dim_y)      
         bgl_filter_sss(base_buffer, samples = 50, radius = 50)
         copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
 
-        #Distance field buffer
-        bgl_filter_distance_field(base_buffer_copy, scale)
+        #Distance field buffer        
+        bgl_filter_distance_field(base_buffer_copy, scale)        
         merge_buffers(base_buffer, base_buffer_copy, "merge_a1tog0", dim_x, dim_y)  
 
         #Decal        
@@ -75,7 +76,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         
         #Ajouter le trait
         bgl_filter_line(base_buffer)
-
+        
     elif len(shadow_objs) == 0:            
             bgl_base_render(base_buffer, vertices, indices, colors)
 
@@ -98,6 +99,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     shadow_buffer.free()
     base_buffer.free()
     bake_buffer.free()
+    base_buffer_copy.free()
     
     #Enregistrement des images
     buffer_to_image( image_name, buffer, texture_size, texture_size)
@@ -268,7 +270,6 @@ def bgl_base_render(offscreen, vertices, indices, colors):
         
         with gpu.matrix.push_pop():
                            
-            #coords = [(1, 0, 0), (0, 0, 0), (0, 1, 0)]
             shader.bind()
             shader.uniform_float("modelMatrix", view_matrix)
             shader.uniform_float("viewProjectionMatrix", projection_matrix)
@@ -477,9 +478,7 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y):
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_float("step", step)
                 batch.draw(shader)
-
-    #copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
-    
+   
     offscreen_B.free()
 
 
@@ -519,4 +518,4 @@ def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_in
         shader.bind()
         batch.draw(shader)
 
-
+    
