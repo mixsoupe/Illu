@@ -333,8 +333,25 @@ def bgl_filter_distance_field(offscreen_A, scale):
 
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
     
+    shader_PRE = compile_shader("image2d.vert", "distance_field_pre.frag")
+    batch_PRE = batch2d(shader_PRE, dim_x, dim_y)
+
     shader = compile_shader("image2d.vert", "distance_field.frag")                    
     batch = batch2d(shader, dim_x, dim_y)
+
+    shader_POST = compile_shader("image2d.vert", "distance_field_post.frag")
+    batch_POST = batch2d(shader_POST, dim_x, dim_y)
+
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
+        
+    #PRE
+    with offscreen_B.bind():                   
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            shader_PRE.bind()
+            shader_PRE.uniform_int("Sampler", 0)
+            batch_PRE.draw(shader_PRE)
        
     step = 1
     div = 50 * scale
@@ -342,22 +359,20 @@ def bgl_filter_distance_field(offscreen_A, scale):
     beta = 1 / div
     offset = (step / dim_x, 0)
 
-    with gpu.matrix.push_pop():
-        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
-        
+
     #LOOP HORIZONTAL
     for i in range(iteration):        
-        with offscreen_B.bind():
+        with offscreen_A.bind():
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
             shader.bind()
             shader.uniform_int("Sampler", 0)
             shader.uniform_float("Beta", beta)
             shader.uniform_float("Offset", offset)
             batch.draw(shader)
-        with offscreen_A.bind():                   
+        with offscreen_B.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
             shader.bind()
             shader.uniform_int("Sampler", 0)
             shader.uniform_float("Beta", beta)
@@ -367,14 +382,6 @@ def bgl_filter_distance_field(offscreen_A, scale):
     #LOOP VERTICAL
     offset = (0, step / dim_y)     
     for i in range(iteration):
-        with offscreen_B.bind():                   
-            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
-            shader.bind()
-            shader.uniform_int("Sampler", 0)
-            shader.uniform_float("Beta", beta)
-            shader.uniform_float("Offset", offset)
-            batch.draw(shader)
         with offscreen_A.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
@@ -383,9 +390,26 @@ def bgl_filter_distance_field(offscreen_A, scale):
             shader.uniform_float("Beta", beta)
             shader.uniform_float("Offset", offset)
             batch.draw(shader)
-     
-    offscreen_B.free()
+        with offscreen_B.bind():                   
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            shader.bind()
+            shader.uniform_int("Sampler", 0)
+            shader.uniform_float("Beta", beta)
+            shader.uniform_float("Offset", offset)
+            batch.draw(shader)
 
+    #POST
+    
+    with offscreen_A.bind():                   
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
+            shader_POST.bind()
+            shader_POST.uniform_int("Sampler", 0)
+            batch_POST.draw(shader_POST)
+
+    offscreen_B.free()
+    
 
 def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False):
     """
