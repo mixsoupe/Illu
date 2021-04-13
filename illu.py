@@ -56,9 +56,11 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     if self_shading:
         #Base render
         bgl_base_render(base_buffer, vertices, indices, colors)
-        
-        bgl_filter_expand(base_buffer, dim_x, dim_y)      
+ 
+        bgl_filter_expand(base_buffer, dim_x, dim_y)
+        bgl_filter_sss(base_buffer, samples = 60, radius = 20, simple = True, channel = 1)      
         bgl_filter_sss(base_buffer, samples = 50, radius = 50)
+        
         copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
 
         #Distance field buffer        
@@ -68,7 +70,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
 
         #Decal        
         bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)     
-               
+             
         #Merge Shadow             
         if len(shadow_objs) > 0:
             merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1", dim_x, dim_y)
@@ -388,7 +390,7 @@ def bgl_filter_distance_field(offscreen_A, scale):
     offscreen_B.free()
 
 
-def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple = False):
+def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple = False, channel = 0):
     """
     Flou en tenant compte de la couche de profondeur
     R = Valeur d'entrée
@@ -415,6 +417,7 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple 
                 shader.uniform_float("step", step)
                 shader.uniform_int("mask", mask)
                 shader.uniform_int("simple", simple)
+                shader.uniform_int("channel", channel)
                 batch.draw(shader)
                 step = (0 / dim_x * radius,1 / dim_y * radius)
                 
@@ -427,6 +430,7 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple 
                 shader.uniform_float("step", step)
                 shader.uniform_int("mask", mask)
                 shader.uniform_int("simple", simple)
+                shader.uniform_int("channel", channel)
                 batch.draw(shader)
 
     offscreen_B.free()

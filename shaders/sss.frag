@@ -4,6 +4,7 @@ uniform sampler2D Sampler;
 uniform vec2 step;
 uniform int mask;
 uniform int simple;
+uniform int channel;
 
 //generate noise
 float random (vec2 st) {
@@ -55,20 +56,25 @@ void main()
             correction *= (1 + intensity - texture(Sampler, offset).a);
         }
 
+        if (simple == 1){
+            // simple blur. FIX Optimiser en mettant la condition en amont
+            correction = 1; 
+        }
+
 
         // If the difference in depth is huge, we lerp color back to "colorM":
         float s = min(correction * abs(depthM - depth), 1.0);        
-
-        if (simple == 1){
-            // simple blur. FIX Optimiser en mettant la condition en amont
-            s = 0.0;
-        }
 
         color = mix(color, colorM, s);
 
         // Accumulate:
         colorBlurred += w[i] * color;
     }
+    
+    if (channel == 0){
     gl_FragColor = vec4(colorBlurred.x, colorBase.g, colorBase.b, colorBase.a);
-
+    }
+    if (channel == 1){
+    gl_FragColor = vec4(colorBase.r, colorBlurred.y, colorBase.b, colorBase.a);
+    }
 }

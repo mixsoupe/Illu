@@ -4,7 +4,6 @@ uniform sampler2D Sampler;
 uniform float Beta;
 uniform vec2 Offset;
 
-
 void main()    
 {        
     
@@ -20,10 +19,15 @@ void main()
         west_uv = vTexCoord;
     }
     vec4 base = texture(Sampler, vTexCoord).rgba;
+    
+    float influence = 8;
+
+    float new_beta = Beta * (influence - base.g*(influence-1));
+
     /* SDF */
     float A = texture(Sampler, vTexCoord).r;                    
-    float e = Beta + texture(Sampler, east_uv).r;
-    float w = Beta + texture(Sampler, west_uv).r;
+    float e = new_beta + texture(Sampler, east_uv).r;
+    float w = new_beta + texture(Sampler, west_uv).r;
     float B = min(min(A, e), w);  
 
     gl_FragColor = vec4(B, base.g, base.b, base.a);
