@@ -63,7 +63,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
 
         #Distance field buffer        
         bgl_filter_distance_field(base_buffer_copy, scale)
-        bgl_filter_sss(base_buffer_copy, samples = 20, radius = 20, simple = True)       
+        bgl_filter_sss(base_buffer_copy, samples = 20, radius = 10, simple = True)       
         merge_buffers(base_buffer, base_buffer_copy, "merge_r1tog0", dim_x, dim_y)  
 
         #Decal        
