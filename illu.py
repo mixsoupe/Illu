@@ -62,8 +62,9 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
 
         #Distance field buffer        
-        bgl_filter_distance_field(base_buffer_copy, scale)        
-        merge_buffers(base_buffer, base_buffer_copy, "merge_a1tog0", dim_x, dim_y)  
+        bgl_filter_distance_field(base_buffer_copy, scale)
+        bgl_filter_sss(base_buffer_copy, samples = 20, radius = 20, simple = True)       
+        merge_buffers(base_buffer, base_buffer_copy, "merge_r1tog0", dim_x, dim_y)  
 
         #Decal        
         bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)     
@@ -337,7 +338,7 @@ def bgl_filter_distance_field(offscreen_A, scale):
     batch = batch2d(shader, dim_x, dim_y)
        
     step = 1
-    div = 50 * scale
+    div = 80 * scale
     iteration = int(div/2) 
     beta = 1 / div
     offset = (step / dim_x, 0)
@@ -387,7 +388,7 @@ def bgl_filter_distance_field(offscreen_A, scale):
     offscreen_B.free()
 
 
-def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False):
+def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple = False):
     """
     Flou en tenant compte de la couche de profondeur
     R = Valeur d'entrée
@@ -413,6 +414,7 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False):
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_float("step", step)
                 shader.uniform_int("mask", mask)
+                shader.uniform_int("simple", simple)
                 batch.draw(shader)
                 step = (0 / dim_x * radius,1 / dim_y * radius)
                 
@@ -424,6 +426,7 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False):
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_float("step", step)
                 shader.uniform_int("mask", mask)
+                shader.uniform_int("simple", simple)
                 batch.draw(shader)
 
     offscreen_B.free()

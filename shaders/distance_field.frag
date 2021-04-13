@@ -19,13 +19,13 @@ void main()
     if (any(lessThan(west_uv, vec2(0.0))) || any(greaterThan(west_uv, vec2(1.0)))) {
         west_uv = vTexCoord;
     }
-    
+    vec4 base = texture(Sampler, vTexCoord).rgba;
     /* SDF */
-    float A = texture(Sampler, vTexCoord).a;                    
-    float e = Beta + texture(Sampler, east_uv).a;
-    float w = Beta + texture(Sampler, west_uv).a;
+    float A = texture(Sampler, vTexCoord).r;                    
+    float e = Beta + texture(Sampler, east_uv).r;
+    float w = Beta + texture(Sampler, west_uv).r;
     float B = min(min(A, e), w);  
 
-    gl_FragColor = vec4(0.0, 0.0, 0.0, B);
+    gl_FragColor = vec4(B, base.g, base.b, base.a);
 
 }

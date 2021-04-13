@@ -3,6 +3,7 @@ in vec2 vTexCoord;
 uniform sampler2D Sampler;
 uniform vec2 step;
 uniform int mask;
+uniform int simple;
 
 //generate noise
 float random (vec2 st) {
@@ -50,12 +51,18 @@ void main()
         float correction = 12;
 
         if (mask == 1){
+            //Sur le contour, le flou ne tient pas compte de la profondeur
             correction *= (1 + intensity - texture(Sampler, offset).a);
         }
 
 
         // If the difference in depth is huge, we lerp color back to "colorM":
         float s = min(correction * abs(depthM - depth), 1.0);        
+
+        if (simple == 1){
+            // simple blur. FIX Optimiser en mettant la condition en amont
+            s = 0.0;
+        }
 
         color = mix(color, colorM, s);
 
