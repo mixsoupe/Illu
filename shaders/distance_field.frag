@@ -3,6 +3,8 @@ uniform sampler2D Sampler;
 
 uniform float Beta;
 uniform vec2 Offset;
+uniform int factor;
+
 
 void main()    
 {        
@@ -20,12 +22,16 @@ void main()
     }
     vec4 base = texture(Sampler, vTexCoord).rgba;
     
-    float influence = 12;
+    float new_beta = Beta;
 
-    float new_beta = Beta * (influence - base.g*(influence-1));
+    if (factor == 1){
+        float influence = 12;
 
-    if (base.g < 0.01){
-        new_beta = 1;
+        new_beta = Beta * (influence - base.g*(influence-1));
+
+        if (base.g < 0.01){
+            new_beta = 1;
+        }
     }
 
     /* SDF */

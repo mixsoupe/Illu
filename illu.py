@@ -40,6 +40,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     
     base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     base_buffer_copy = gpu.types.GPUOffScreen(dim_x, dim_y)
+    erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
     #Creation du modele        
@@ -60,19 +61,19 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_filter_sss(base_buffer, samples = 20, radius = 10, simple = True, channel = 1)
         
         copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
+        copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
         
         #Distance field buffer        
         bgl_filter_distance_field(base_buffer_copy, scale)
         bgl_filter_sss(base_buffer_copy, samples = 20, radius = 10, simple = True)
-        bgl_filter_expand(base_buffer_copy, dim_x, dim_y, -4)
+        bgl_filter_expand(base_buffer_copy, dim_x, dim_y, -4)        
         merge_buffers(base_buffer_copy, base_buffer, "merge_a1toa0", dim_x, dim_y)
         bgl_filter_sss(base_buffer_copy, samples = 20, radius = 2, simple = True) 
-
 
         merge_buffers(base_buffer, base_buffer_copy, "merge_r1tog0", dim_x, dim_y)  
 
         #Decal        
-        bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)     
+        bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)    
              
         #Merge Shadow             
         if len(shadow_objs) > 0:
@@ -82,7 +83,11 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         
         #Ajouter le trait
         bgl_filter_line(base_buffer)
-        
+
+        #Erosion alpha
+        #bgl_filter_distance_field(erosion_buffer, 0.1, factor = False)
+        #merge_buffers(base_buffer, erosion_buffer, "merge_r1toa0", dim_x, dim_y)  
+
     elif len(shadow_objs) == 0:            
             bgl_base_render(base_buffer, vertices, indices, colors)
 
@@ -335,7 +340,7 @@ def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
     offscreen_B.free()
             
 
-def bgl_filter_distance_field(offscreen_A, scale):    
+def bgl_filter_distance_field(offscreen_A, scale,  factor = True):    
 
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
     
@@ -360,6 +365,7 @@ def bgl_filter_distance_field(offscreen_A, scale):
             shader.uniform_int("Sampler", 0)
             shader.uniform_float("Beta", beta)
             shader.uniform_float("Offset", offset)
+            shader.uniform_int("factor", factor)
             batch.draw(shader)
         with offscreen_A.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
@@ -368,6 +374,7 @@ def bgl_filter_distance_field(offscreen_A, scale):
             shader.uniform_int("Sampler", 0)
             shader.uniform_float("Beta", beta)
             shader.uniform_float("Offset", offset)
+            shader.uniform_int("factor", factor)
             batch.draw(shader)
                
     #LOOP VERTICAL
@@ -380,6 +387,7 @@ def bgl_filter_distance_field(offscreen_A, scale):
             shader.uniform_int("Sampler", 0)
             shader.uniform_float("Beta", beta)
             shader.uniform_float("Offset", offset)
+            shader.uniform_int("factor", factor)
             batch.draw(shader)
         with offscreen_A.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
@@ -388,6 +396,7 @@ def bgl_filter_distance_field(offscreen_A, scale):
             shader.uniform_int("Sampler", 0)
             shader.uniform_float("Beta", beta)
             shader.uniform_float("Offset", offset)
+            shader.uniform_int("factor", factor)
             batch.draw(shader)
      
     offscreen_B.free()
