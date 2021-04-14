@@ -52,17 +52,15 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow) 
         
     
-    #Base buffer  
+    #Base buffer  n
     if self_shading:
         #Base render
-        bgl_base_render(base_buffer, vertices, indices, colors)
- 
+        bgl_base_render(base_buffer, vertices, indices, colors) 
         bgl_filter_expand(base_buffer, dim_x, dim_y)
-        bgl_filter_sss(base_buffer, samples = 60, radius = 20, simple = True, channel = 1)      
-        bgl_filter_sss(base_buffer, samples = 50, radius = 50)
+        bgl_filter_sss(base_buffer, samples = 20, radius = 10, simple = True, channel = 1)
         
         copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
-
+        
         #Distance field buffer        
         bgl_filter_distance_field(base_buffer_copy, scale)
         bgl_filter_sss(base_buffer_copy, samples = 20, radius = 10, simple = True)       

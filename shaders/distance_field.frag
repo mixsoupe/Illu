@@ -20,9 +20,13 @@ void main()
     }
     vec4 base = texture(Sampler, vTexCoord).rgba;
     
-    float influence = 8;
+    float influence = 12;
 
     float new_beta = Beta * (influence - base.g*(influence-1));
+
+    if (base.g < 0.01){
+        new_beta = 1;
+    }
 
     /* SDF */
     float A = texture(Sampler, vTexCoord).r;                    
