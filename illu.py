@@ -56,14 +56,19 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     if self_shading:
         #Base render
         bgl_base_render(base_buffer, vertices, indices, colors) 
-        bgl_filter_expand(base_buffer, dim_x, dim_y)
+        bgl_filter_expand(base_buffer, dim_x, dim_y, 3)
         bgl_filter_sss(base_buffer, samples = 20, radius = 10, simple = True, channel = 1)
         
         copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
         
         #Distance field buffer        
         bgl_filter_distance_field(base_buffer_copy, scale)
-        bgl_filter_sss(base_buffer_copy, samples = 20, radius = 10, simple = True)       
+        bgl_filter_sss(base_buffer_copy, samples = 20, radius = 10, simple = True)
+        bgl_filter_expand(base_buffer_copy, dim_x, dim_y, -4)
+        merge_buffers(base_buffer_copy, base_buffer, "merge_a1toa0", dim_x, dim_y)
+        bgl_filter_sss(base_buffer_copy, samples = 20, radius = 2, simple = True) 
+
+
         merge_buffers(base_buffer, base_buffer_copy, "merge_r1tog0", dim_x, dim_y)  
 
         #Decal        
@@ -88,7 +93,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     #Bake to texture
     bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)
     bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices)
-    bgl_filter_expand(bake_buffer, texture_size, texture_size)
+    bgl_filter_expand(bake_buffer, texture_size, texture_size, 3)
 
     #Lecture du buffer    
     with bake_buffer.bind():        
@@ -456,7 +461,7 @@ def bgl_filter_line(offscreen_A):
     offscreen_B.free()
 
 
-def bgl_filter_expand(offscreen_A, dim_x, dim_y):
+def bgl_filter_expand(offscreen_A, dim_x, dim_y, value):
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "expand.frag")                        
@@ -465,7 +470,13 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y):
     with gpu.matrix.push_pop():
         gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
     
-    for i in range (3):
+    if value > 0:
+        expand = 1
+    else:
+        expand = 0
+
+    iteration = abs(value)
+    for i in range (iteration):
         step = (1/dim_x, 0)
         with offscreen_B.bind():                   
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
@@ -473,6 +484,7 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y):
                 shader.bind()
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_float("step", step)
+                shader.uniform_int("expand", expand)
                 batch.draw(shader)
 
         step = (0, 1/dim_y)
@@ -482,6 +494,7 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y):
                 shader.bind()
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_float("step", step)
+                shader.uniform_int("expand", expand)
                 batch.draw(shader)
    
     offscreen_B.free()
