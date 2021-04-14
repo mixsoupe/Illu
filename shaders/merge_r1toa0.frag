@@ -9,5 +9,5 @@ void main()
 
     //float r = color0.r * color1.r;
 
-    gl_FragColor = vec4(color0.r, color0.r, color0.b, color1.r);
+    gl_FragColor = vec4(color0.r, color0.g, color0.b, color1.r);
 }

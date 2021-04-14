@@ -85,8 +85,8 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_filter_line(base_buffer)
 
         #Erosion alpha
-        #bgl_filter_distance_field(erosion_buffer, 0.1, factor = False)
-        #merge_buffers(base_buffer, erosion_buffer, "merge_r1toa0", dim_x, dim_y)  
+        bgl_filter_distance_field(erosion_buffer, scale, factor = False)
+        merge_buffers(base_buffer, erosion_buffer, "merge_r1toa0", dim_x, dim_y)  #FIX FIX l'alpha attaque les autres couches
 
     elif len(shadow_objs) == 0:            
             bgl_base_render(base_buffer, vertices, indices, colors)
