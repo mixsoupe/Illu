@@ -63,7 +63,8 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
         copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
         
-        #Distance field buffer        
+        #Distance field buffer
+             
         bgl_filter_distance_field(base_buffer_copy, scale)
         bgl_filter_sss(base_buffer_copy, samples = 20, radius = 10, simple = True)
         bgl_filter_expand(base_buffer_copy, dim_x, dim_y, -4)        
@@ -71,7 +72,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_filter_sss(base_buffer_copy, samples = 20, radius = 2, simple = True) 
 
         merge_buffers(base_buffer, base_buffer_copy, "merge_r1tog0", dim_x, dim_y)  
-
+        
         #Decal        
         bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)    
              
@@ -84,9 +85,8 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         #Ajouter le trait
         bgl_filter_line(base_buffer)
 
-        #Erosion alpha
-        bgl_filter_distance_field(erosion_buffer, 0.4, factor = False)
-        bgl_filter_sss(erosion_buffer, samples = 12, radius = 5, simple = True)
+        #Noise
+        bgl_filter_noise(base_buffer, 400.0, 0.005)
         #merge_buffers(base_buffer, erosion_buffer, "merge_r1toa0", dim_x, dim_y)  #FIX FIX l'alpha attaque les autres couches
 
     elif len(shadow_objs) == 0:            
@@ -99,7 +99,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     #Bake to texture
     bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)
     bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices)
-    bgl_filter_expand(bake_buffer, texture_size, texture_size, 3)
+    #bgl_filter_expand(bake_buffer, texture_size, texture_size, 3)
 
     #Lecture du buffer    
     with bake_buffer.bind():        
@@ -112,6 +112,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     base_buffer.free()
     bake_buffer.free()
     base_buffer_copy.free()
+    erosion_buffer.free()
     
     #Enregistrement des images
     buffer_to_image( image_name, buffer, texture_size, texture_size)
@@ -547,3 +548,28 @@ def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_in
         batch.draw(shader)
 
     
+
+
+def bgl_filter_noise(offscreen_A, scale, amplitude):    
+
+    offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
+    
+    shader = compile_shader("image2d.vert", "noise.frag")                    
+    batch = batch2d(shader, dim_x, dim_y)
+
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))        
+      
+    with offscreen_B.bind():
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            shader.bind()
+            shader.uniform_int("Sampler", 0)
+            shader.uniform_float("scale", scale)
+            shader.uniform_float("amplitude", amplitude)
+            shader.uniform_float("u_resolution", (dim_x, dim_y))
+            batch.draw(shader)
+    
+    copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
+
+    offscreen_B.free()
