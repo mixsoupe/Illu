@@ -24,7 +24,7 @@ from mathutils import Matrix, Vector, Euler
 from . shader_utils import *
 
 #FIX Prévoir un overscan
-def generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading):
+def generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading, noise_scale, noise_diffusion):
     T = time.time()
     global dim_x
     global dim_y
@@ -53,7 +53,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow) 
         
     
-    #Base buffer  n
+    #Base buffer  
     if self_shading:
         #Base render
         bgl_base_render(base_buffer, vertices, indices, colors) 
@@ -61,7 +61,6 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_filter_sss(base_buffer, samples = 20, radius = 10, simple = True, channel = 1)
         
         copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
-        copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
         
         #Distance field buffer
              
@@ -86,8 +85,9 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_filter_line(base_buffer)
 
         #Noise
-        bgl_filter_noise(base_buffer, 400.0, 0.005)
-        #merge_buffers(base_buffer, erosion_buffer, "merge_r1toa0", dim_x, dim_y)  #FIX FIX l'alpha attaque les autres couches
+        copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
+        bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)        
+        merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)  #FIX FIX l'alpha attaque les autres couches
 
     elif len(shadow_objs) == 0:            
             bgl_base_render(base_buffer, vertices, indices, colors)
@@ -99,7 +99,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     #Bake to texture
     bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)
     bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices)
-    #bgl_filter_expand(bake_buffer, texture_size, texture_size, 3)
+    bgl_filter_expand(bake_buffer, texture_size, texture_size, 3)
 
     #Lecture du buffer    
     with bake_buffer.bind():        

@@ -100,6 +100,14 @@ class ILLUNodeProperties(bpy.types.PropertyGroup):
         name = "Soft Shadow",
         default = 1.0,
         )
+    noise_scale: bpy.props.FloatProperty(
+        name = "Noise Scale",
+        default = 400.0,
+        )        
+    noise_diffusion: bpy.props.FloatProperty(
+        name = "Noise Diffusion",
+        default = 1.0,
+        )
     texture_size: bpy.props.EnumProperty(
         name="Texture Size",
         items=[ ('1024', '1024', ""),
@@ -155,6 +163,8 @@ class ILLU_PT_node_ui(bpy.types.Panel):
         layout.prop(illu, "depth_precision")
         layout.prop(illu, "angle")               
         layout.prop(illu, "soft_shadow")
+        layout.prop(illu, "noise_scale")
+        layout.prop(illu, "noise_diffusion")
         layout.prop(illu, "texture_size") 
         layout.prop(illu, "shadow_size")
         layout.prop(illu, "self_shading")        
@@ -259,9 +269,11 @@ def update_image(illu):
     texture_size = int(illu.texture_size)
     shadow_size = int(illu.shadow_size)
     soft_shadow = illu.soft_shadow
-    self_shading = illu.self_shading    
+    self_shading = illu.self_shading
+    noise_scale = illu.noise_scale
+    noise_diffusion = illu.noise_diffusion   
 
-    generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading)
+    generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading, noise_scale, noise_diffusion)
 
 def update_all():
     
