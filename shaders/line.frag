@@ -17,7 +17,7 @@ void main()
 {
     vec3 diffuse = texture(Sampler, vTexCoord.st).rgb;
     float alpha = texture(Sampler, vTexCoord.st).a;              
-    int thickness = 2;
+    int thickness = 1;
 
     mat3 I;
     for (int i=0; i<3; i++) {
