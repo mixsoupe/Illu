@@ -87,14 +87,15 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         #Noise
         copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
         bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)        
-        merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)  #FIX FIX l'alpha attaque les autres couches
+        merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
 
     elif len(shadow_objs) == 0:            
             bgl_base_render(base_buffer, vertices, indices, colors)
 
-    else:             
+    else:                    
         copy_buffer(shadow_buffer, base_buffer, dim_x, dim_y)
         bgl_filter_sss(base_buffer, samples = int(10 * soft_shadow), radius = int(3 * soft_shadow))
+        bgl_filter_noise(base_buffer, noise_scale, noise_diffusion/100) 
 
     #Bake to texture
     bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)
