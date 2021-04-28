@@ -52,7 +52,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs) 
         bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow) 
         
-    for i in range(3):
+    for i in range(10):
         #Base buffer  
         if self_shading:
             #Base render
