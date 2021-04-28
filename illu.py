@@ -108,7 +108,10 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
             buffer = bgl.Buffer(bgl.GL_FLOAT, texture_size * texture_size * 4)        
             bgl.glReadBuffer(bgl.GL_BACK)        
             bgl.glReadPixels(0, 0, texture_size, texture_size, bgl.GL_RGBA, bgl.GL_FLOAT, buffer)   
-
+       
+       #Check
+        valid = valid_check(base_buffer)
+        
         #Suppression des buffers
         shadow_buffer.free()
         base_buffer.free()
@@ -116,8 +119,6 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         base_buffer_copy.free()
         erosion_buffer.free()
 
-        #Check
-        valid = valid_check(base_buffer)
         if valid:
             break
     
