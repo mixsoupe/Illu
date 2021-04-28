@@ -39,18 +39,21 @@ float snoise(vec2 v) {
 
 void main()    
 {  
+    vec4 color = texture(Sampler, vTexCoord);
     vec2 st = vTexCoord;
     st.x *= u_resolution.x/u_resolution.y;
 
+    float seed = color.r;
     st *= scale;
+    st += seed;
 
     float noise = snoise(st)+0.5;
     
     float offset = mix(-amplitude, amplitude, noise);
 
-    vec4 color = texture(Sampler, vTexCoord + offset);
+    vec4 final_color = texture(Sampler, vTexCoord + offset);
 
-    gl_FragColor = color;
+    gl_FragColor = final_color;
 
     
 
