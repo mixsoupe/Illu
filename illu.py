@@ -74,22 +74,21 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
             merge_buffers(base_buffer, base_buffer_copy, "merge_r1tog0", dim_x, dim_y)  
             
             #Decal        
-            bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)    
-                
+            bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
+            bgl_filter_sss(base_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), mask = False)
+
             #Merge Shadow             
             if len(shadow_objs) > 0:
                 merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1", dim_x, dim_y)
                 
-            #FIXbgl_filter_sss(base_buffer, samples = 60, radius = 20, mask = True)
-            
             #Ajouter le trait
             bgl_filter_line(base_buffer)
 
-            #Noise
+            #Noise            
             copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
             bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)        
             merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
-
+            
         elif len(shadow_objs) == 0:            
                 bgl_base_render(base_buffer, vertices, indices, colors)
 
