@@ -80,7 +80,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
             if len(shadow_objs) > 0:
                 merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1", dim_x, dim_y)
                 
-            bgl_filter_sss(base_buffer, samples = 60, radius = 20, mask = True)
+            #FIXbgl_filter_sss(base_buffer, samples = 60, radius = 20, mask = True)
             
             #Ajouter le trait
             bgl_filter_line(base_buffer)
