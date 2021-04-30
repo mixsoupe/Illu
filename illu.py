@@ -52,7 +52,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         if len(shadow_objs) > 0:
             vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs) 
             bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow)         
-    
+        
         #Base buffer  
         if self_shading:
             #Base render
@@ -97,43 +97,43 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
             bgl_filter_sss(base_buffer, samples = int(10 * soft_shadow), radius = int(3 * soft_shadow))
             bgl_filter_noise(base_buffer, noise_scale, noise_diffusion/100) 
         
-        #Bake  
-        if bake_to_uvs:
-            bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)           
-            bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices)
-            bgl_filter_expand(bake_buffer, texture_size, texture_size, 3)            
-            #Lecture du buffer 
-            with bake_buffer.bind():        
-                buffer = bgl.Buffer(bgl.GL_FLOAT, texture_size * texture_size * 4)        
-                bgl.glReadBuffer(bgl.GL_BACK)        
-                bgl.glReadPixels(0, 0, texture_size, texture_size, bgl.GL_RGBA, bgl.GL_FLOAT, buffer)
-            bake_buffer.free()
-            dim_x = texture_size
-            dim_y = texture_size
-            
-        else:
-            bgl_filter_scale(base_buffer, upscale_factor())
-            with base_buffer.bind():        
-                buffer = bgl.Buffer(bgl.GL_FLOAT, dim_x * dim_y * 4)        
-                bgl.glReadBuffer(bgl.GL_BACK)        
-                bgl.glReadPixels(0, 0, dim_x, dim_y, bgl.GL_RGBA, bgl.GL_FLOAT, buffer)  
- 
-       #Check
+        #Check
         valid = valid_check(base_buffer)
-        
-        #Suppression des buffers
-        shadow_buffer.free()
-        base_buffer.free()        
-        base_buffer_copy.free()
-        erosion_buffer.free()
 
         if valid:
             break
-    
-    #Enregistrement des images
-    buffer_to_image( image_name, buffer, dim_x, dim_y)    
-    #print((time.time() - T)*1000)
 
+    #Bake  
+    if bake_to_uvs:
+        bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)           
+        bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices)
+        bgl_filter_expand(bake_buffer, texture_size, texture_size, 3)            
+        #Lecture du buffer 
+        with bake_buffer.bind():        
+            buffer = bgl.Buffer(bgl.GL_FLOAT, texture_size * texture_size * 4)        
+            bgl.glReadBuffer(bgl.GL_BACK)        
+            bgl.glReadPixels(0, 0, texture_size, texture_size, bgl.GL_RGBA, bgl.GL_FLOAT, buffer)
+        bake_buffer.free()
+        dim_x = texture_size
+        dim_y = texture_size
+        
+    else:
+        bgl_filter_scale(base_buffer, upscale_factor())
+        with base_buffer.bind():        
+            buffer = bgl.Buffer(bgl.GL_FLOAT, dim_x * dim_y * 4)        
+            bgl.glReadBuffer(bgl.GL_BACK)        
+            bgl.glReadPixels(0, 0, dim_x, dim_y, bgl.GL_RGBA, bgl.GL_FLOAT, buffer)  
+    
+    #Suppression des buffers
+    shadow_buffer.free()               
+    base_buffer_copy.free()
+    erosion_buffer.free()
+    base_buffer.free()
+
+    #Enregistrement des images
+    buffer_to_image( image_name, buffer, dim_x, dim_y)
+
+    #print((time.time() - T)*1000)
 
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
     vertices_shadow, indices_shadow, light, shadow_size, soft_shadow):
@@ -610,19 +610,43 @@ def bgl_filter_scale(offscreen_A, scale):
     offscreen_B.free()
 
 def valid_check(offscreen_A):
-    with offscreen_A.bind():
-            """
+    offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
+    offscreen_C = gpu.types.GPUOffScreen(dim_x, dim_y)
+
+    shader = compile_shader("image2d.vert", "check.frag")                    
+    batch = batch2d(shader, dim_x, dim_y)
+
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))  
+
+    with offscreen_B.bind():            
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_float("offset", (1, 0))
+            shader.uniform_int("iteration", dim_x)
             batch.draw(shader)
-            """
+    
+    with offscreen_C.bind():            
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)
+            shader.bind()
+            shader.uniform_int("Sampler", 0)
+            shader.uniform_float("offset", (0, 1))
+            shader.uniform_int("iteration", dim_y)
+            batch.draw(shader)
+            
             buffer = bgl.Buffer(bgl.GL_BYTE, dim_x * dim_y)        
             bgl.glReadBuffer(bgl.GL_BACK)        
             bgl.glReadPixels(0, 0, dim_x, dim_y, bgl.GL_GREEN, bgl.GL_BYTE, buffer)        
 
-    value = max(buffer.to_list())
+    #copy_buffer(offscreen_C, offscreen_A, dim_x, dim_y)
+
+    offscreen_B.free()
+    offscreen_C.free()
+
+    value = buffer[0]
 
     if value > 0:
         return True
