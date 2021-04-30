@@ -128,6 +128,10 @@ class ILLUNodeProperties(bpy.types.PropertyGroup):
         name="Self Shading",
         default = True
         )
+    bake_to_uvs: bpy.props.BoolProperty(
+        name="Bake to UVs",
+        default = False
+        )
 class ILLUObjectProperties(bpy.types.PropertyGroup):
     cast_shadow: bpy.props.BoolProperty(
         name="Cast Shadow",
@@ -167,7 +171,8 @@ class ILLU_PT_node_ui(bpy.types.Panel):
         layout.prop(illu, "noise_diffusion")
         layout.prop(illu, "texture_size") 
         layout.prop(illu, "shadow_size")
-        layout.prop(illu, "self_shading")        
+        layout.prop(illu, "self_shading")
+        layout.prop(illu, "bake_to_uvs")       
         layout.operator("illu.update")
         layout.separator()
 
@@ -270,10 +275,11 @@ def update_image(illu):
     shadow_size = int(illu.shadow_size)
     soft_shadow = illu.soft_shadow
     self_shading = illu.self_shading
+    bake_to_uvs = illu.bake_to_uvs
     noise_scale = illu.noise_scale
     noise_diffusion = illu.noise_diffusion   
 
-    generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading, noise_scale, noise_diffusion)
+    generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading, bake_to_uvs, noise_scale, noise_diffusion)
 
 def update_all():
     

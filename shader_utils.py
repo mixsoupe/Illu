@@ -362,4 +362,12 @@ def change_camera_matrix(camera, dim_x, dim_y):
             clip_end = clip_end, dim_x = dim_x, dim_y = dim_y)
 
     return projection_matrix
+
+def upscale_factor():
+    camera = bpy.context.scene.camera    
+    plane = math.tan(camera.data.angle/2)*2
+    upscale_plane = math.tan((camera.data.angle * 1.2)/2)*2
+    factor = plane/upscale_plane
+
+    return factor
     
