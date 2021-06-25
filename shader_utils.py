@@ -370,4 +370,11 @@ def upscale_factor():
     factor = plane/upscale_plane
 
     return factor
+
+def traverse_node_tree(note_tree):
+    yield note_tree
+    for node in note_tree.nodes:
+        if node.bl_idname =="ShaderNodeGroup":
+            if node.node_tree is not None:
+                yield from traverse_node_tree(node.node_tree)
     

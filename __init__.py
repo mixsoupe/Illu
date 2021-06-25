@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (0, 0, 4),
+    "version" : (0, 0, 5),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -67,7 +67,7 @@ class ILLU_Preferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        #column = layout.column()
+        column = layout.column()
 
         addon_updater_ops.update_settings_ui(self,context)
 
@@ -225,6 +225,10 @@ class ILLU_PT_object_ui(bpy.types.Panel):
 
         layout.prop(illu, "cast_shadow") 
 
+
+#CUSTOM NODE
+
+
    
 #OPERATORS
 class ILLU_OT_update(bpy.types.Operator):
@@ -285,11 +289,12 @@ def update_all():
     
     for material in bpy.data.materials:
             if material.node_tree is not None:
-                for node in material.node_tree.nodes:
-                    if node.bl_idname == 'ShaderNodeTexImage':
-                        illu = node.illu
-                        if illu.image_name is not '' and illu.objects is not '' and illu.light is not '':    
-                            update_image(illu)
+                for node_tree in traverse_node_tree(material.node_tree):
+                    for node in node_tree.nodes:
+                        if node.bl_idname == 'ShaderNodeTexImage':
+                            illu = node.illu
+                            if illu.image_name is not '' and illu.objects is not '' and illu.light is not '':    
+                                update_image(illu)
 
 @persistent
 def update_handler(dummy):
