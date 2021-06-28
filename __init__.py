@@ -319,7 +319,7 @@ def register():
         register_class(cls)
 
     if not hasattr( bpy.types.ShaderNodeTexImage, 'illu'):
-        bpy.types.ShaderNodeTexImage.illu = bpy.props.PointerProperty(type=ILLUNodeProperties)
+        bpy.types.ShaderNodeTexImage.illu = bpy.props.PointerProperty(type=ILLUNodeProperties)    
     if not hasattr( bpy.types.Object, 'illu'):
         bpy.types.Object.illu = bpy.props.PointerProperty(type=ILLUObjectProperties, override={'LIBRARY_OVERRIDABLE'}) #FIX Simplifier, supprimer le group de propriété
     if not hasattr( bpy.types.Scene, 'playback'):
