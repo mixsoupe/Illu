@@ -201,10 +201,13 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
         self.addNodes([('NodeGroupInput', {'name':'Group Input'}),
                     ('NodeGroupOutput', {'name':'Group Output'}),
                     ('ShaderNodeTexImage', {'name':'Image'}),
-                    ('ShaderNodeSeparateRGB', {'name':'Separate'}),                    
+                    ('ShaderNodeSeparateRGB', {'name':'Separate'}),
+                    ('ShaderNodeMath', {'name':'Line', 'operation':'LESS_THAN'}),
+                    ('ShaderNodeMath', {'name':'Border', 'operation':'GREATER_THAN'}),                    
                     ])
         self.addInputs([('NodeSocketVector', {'name':'Vector', 'default_value':(0.0, 0.0, 0.0)})])
         self.addOutputs([('NodeSocketFloat', {'name':'Shade'}),
+                    ('NodeSocketFloat', {'name':'Distance Field'}),
                     ('NodeSocketFloat', {'name':'Border'}),
                     ('NodeSocketFloat', {'name':'Line'}),
                     ('NodeSocketFloat', {'name':'Alpha'}),
@@ -213,10 +216,15 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
                     ('inputs[0]', 'nodes["Image"].inputs[0]'),
                     ('nodes["Separate"].outputs[0]', 'outputs[0]'),
                     ('nodes["Separate"].outputs[1]', 'outputs[1]'),
-                    ('nodes["Separate"].outputs[2]', 'outputs[2]'),
-                    ('nodes["Image"].outputs[1]', 'outputs[3]'),
+                    ('nodes["Separate"].outputs[2]', 'nodes["Line"].inputs[0]'),
+                    ('nodes["Separate"].outputs[2]', 'nodes["Border"].inputs[0]'),
+                    ('nodes["Border"].outputs[0]', 'outputs[2]'),
+                    ('nodes["Line"].outputs[0]', 'outputs[3]'),
+                    ('nodes["Image"].outputs[1]', 'outputs[4]'),
                     ])
         self.node_tree.inputs[0].hide_value = True
+        self.node_tree.nodes['Line'].inputs[1].default_value = 0.5
+        self.node_tree.nodes['Border'].inputs[1].default_value = 0.130
 
     def new_image(self):
         if self.node_tree.name in bpy.data.images:
@@ -360,7 +368,7 @@ def register():
 
     bpy.app.handlers.frame_change_post.append(update_handler)
 
-    register_node_categories("SH_TESTING_NODES", shcat)
+    register_node_categories("ILLU_NODES", shcat)
 
 def unregister():
     addon_updater_ops.register(bl_info)
