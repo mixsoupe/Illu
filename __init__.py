@@ -66,74 +66,13 @@ class ILLU_Preferences(bpy.types.AddonPreferences):
         max=59
     )
 
-
     def draw(self, context):
         layout = self.layout
         column = layout.column()
 
         addon_updater_ops.update_settings_ui(self,context)
 
-
 #PROPS
-class ILLUNodeProperties(bpy.types.PropertyGroup):
-
-    image_name: bpy.props.StringProperty(
-        name="Image Name",
-        )    
-    objects: bpy.props.StringProperty(
-        name="Object",
-        )
-    light: bpy.props.StringProperty(
-        name="Light",
-        )
-    scale: bpy.props.FloatProperty(
-        name = "Scale",
-        default = 1.0,
-        )      
-    depth_precision: bpy.props.FloatProperty(
-        name = "Volume Depth Precision",
-        default = 0.08,
-        )    
-    angle: bpy.props.FloatProperty(
-        name = "Angle Compensation",
-        default = 0.0,
-        )
-    soft_shadow: bpy.props.FloatProperty(
-        name = "Soft Shadow",
-        default = 1.0,
-        )
-    noise_scale: bpy.props.FloatProperty(
-        name = "Noise Scale",
-        default = 400.0,
-        )        
-    noise_diffusion: bpy.props.FloatProperty(
-        name = "Noise Diffusion",
-        default = 1.0,
-        )
-    texture_size: bpy.props.EnumProperty(
-        name="Texture Size",
-        items=[ ('1024', '1024', ""),
-                ('2048', '2048', ""),
-                ('4096', '4096', ""),
-               ],
-        default = '2048',
-        )
-    shadow_size: bpy.props.EnumProperty(
-        name="Shadow Size",
-        items=[ ('1024', '1024', ""),
-                ('2048', '2048', ""),
-                ('4096', '4096', ""),
-               ],
-        default = '2048',
-        )
-    self_shading: bpy.props.BoolProperty(
-        name="Self Shading",
-        default = True
-        )
-    bake_to_uvs: bpy.props.BoolProperty(
-        name="Bake to UVs",
-        default = False
-        )
 class ILLUObjectProperties(bpy.types.PropertyGroup):
     cast_shadow: bpy.props.BoolProperty(
         name="Cast Shadow",
@@ -142,42 +81,6 @@ class ILLUObjectProperties(bpy.types.PropertyGroup):
         )
 
 #PANELS
-class ILLU_PT_node_ui(bpy.types.Panel):
-    bl_label = "Illu"
-    bl_idname = "ILLU_PT_node_ui"
-    bl_space_type = "NODE_EDITOR"   
-    bl_region_type = "UI"
-    bl_category = "Illu"
-    bl_context = "objectmode"
-
-    @classmethod
-    def poll(self,context):
-        node = context.active_node
-        if node is None:
-            return False
-        return node.bl_idname == 'ShaderNodeTexImage'
-        
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        illu = context.active_node.illu
-
-        layout.prop(illu, "image_name")
-        layout.prop_search(illu, "objects", bpy.data, "objects")
-        layout.prop_search(illu, "light", bpy.data, "objects")
-        layout.prop(illu, "scale")
-        layout.prop(illu, "depth_precision")
-        layout.prop(illu, "angle")               
-        layout.prop(illu, "soft_shadow")
-        layout.prop(illu, "noise_scale")
-        layout.prop(illu, "noise_diffusion")
-        layout.prop(illu, "texture_size") 
-        layout.prop(illu, "shadow_size")
-        layout.prop(illu, "self_shading")
-        layout.prop(illu, "bake_to_uvs")       
-        layout.operator("illu.update")
-        layout.separator()
-
 class ILLU_PT_view3d_ui(bpy.types.Panel):
     bl_label = "Illu"
     bl_idname = "ILLU_PT_view3d_ui"
@@ -226,7 +129,6 @@ class ILLU_PT_object_ui(bpy.types.Panel):
         illu = obj.illu
 
         layout.prop(illu, "cast_shadow") 
-
 
 #CUSTOM NODE    
 class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
@@ -337,8 +239,7 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
         layout.prop(self, 'shadow_size')
         layout.prop(self, 'self_shading')
         layout.prop(self, 'bake_to_uvs')
-        #layout.operator("illu.update")
-        layout.separator()
+        layout.operator("illu.update")        
 
     def init(self, context):
         self._new_node_tree()
@@ -371,21 +272,15 @@ class ILLU_OT_update(bpy.types.Operator):
         node = context.active_node
         if node is None:
             return False
-        return node.bl_idname == 'ShaderNodeTexImage'
+        return node.bl_idname == 'ILLU_2DShade'
     
-    def execute(self, context):
-        
+    def execute(self, context):        
         node = context.active_node
-        illu = node.illu
-
-        if illu.image_name is not '' and illu.objects is not '' and illu.light is not '':    
-            update_image(illu)
-            image = bpy.data.images[illu.image_name]
-            node.image = image
+        if node.objects is not '' and node.light is not '':    
+            update_image(node)
         else:
             self.report({"WARNING"}, "Missing properties")
-            return {'CANCELLED'}
-        
+            return {'CANCELLED'}        
         return {'FINISHED'}
 
 class ILLU_OT_update_all(bpy.types.Operator):
@@ -398,33 +293,42 @@ class ILLU_OT_update_all(bpy.types.Operator):
         return {'FINISHED'}
 
 #FUNCTIONS
-def update_image(illu):
-    obj = [bpy.data.objects[illu.objects] ,] 
-    image_name = illu.image_name
-    light = bpy.data.objects[illu.light]
-    scale = illu.scale
-    depth_precision = illu.depth_precision
-    angle = illu.angle
-    texture_size = int(illu.texture_size)
-    shadow_size = int(illu.shadow_size)
-    soft_shadow = illu.soft_shadow
-    self_shading = illu.self_shading
-    bake_to_uvs = illu.bake_to_uvs
-    noise_scale = illu.noise_scale
-    noise_diffusion = illu.noise_diffusion   
+def update_image(node):
+    obj = [bpy.data.objects[node.objects] ,] 
+    image_name = node.node_tree.nodes['Image'].image.name
+    light = bpy.data.objects[node.light]
+    scale = node.scale
+    depth_precision = node.depth_precision
+    angle = node.angle
+    texture_size = int(node.texture_size)
+    shadow_size = int(node.shadow_size)
+    soft_shadow = node.soft_shadow
+    self_shading = node.self_shading
+    bake_to_uvs = node.bake_to_uvs
+    noise_scale = node.noise_scale
+    noise_diffusion = node.noise_diffusion   
 
-    generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading, bake_to_uvs, noise_scale, noise_diffusion)
+    generate_images(obj, 
+                    image_name, 
+                    light, scale, 
+                    depth_precision, 
+                    angle, texture_size, 
+                    shadow_size, 
+                    soft_shadow, 
+                    self_shading, 
+                    bake_to_uvs, 
+                    noise_scale, 
+                    noise_diffusion
+                    )
 
 def update_all():
-    
     for material in bpy.data.materials:
-            if material.node_tree is not None:
-                for node_tree in traverse_node_tree(material.node_tree):
-                    for node in node_tree.nodes:
-                        if node.bl_idname == 'ShaderNodeTexImage':
-                            illu = node.illu
-                            if illu.image_name is not '' and illu.objects is not '' and illu.light is not '':    
-                                update_image(illu)
+        if material.node_tree is not None:
+            for node_tree in traverse_node_tree(material.node_tree):
+                for node in node_tree.nodes:
+                    if node.bl_idname == 'ILLU_2DShade':
+                        if node.objects is not '' and node.light is not '':
+                            update_image(node)
 
 @persistent
 def update_handler(dummy):
@@ -434,9 +338,7 @@ def update_handler(dummy):
 #REGISTER UNREGISTER
 classes = (
     ILLU_Preferences,
-    ILLUNodeProperties, 
     ILLUObjectProperties,
-    ILLU_PT_node_ui, 
     ILLU_PT_view3d_ui,
     ILLU_PT_object_ui,
     ILLU_OT_update, 
@@ -444,15 +346,13 @@ classes = (
     ILLU_2DShade,
     )
 
-shcat = [ShaderNodeCategory("SH_TESTING_NODES", "Illu", items=[NodeItem("ILLU_2DShade")]),]
+shcat = [ShaderNodeCategory("ILLU_NODES", "Illu", items=[NodeItem("ILLU_2DShade")]),]
 
 def register():
     from bpy.utils import register_class
     for cls in classes:
         register_class(cls)
-
-    if not hasattr( bpy.types.ShaderNodeTexImage, 'illu'):
-        bpy.types.ShaderNodeTexImage.illu = bpy.props.PointerProperty(type=ILLUNodeProperties)    
+  
     if not hasattr( bpy.types.Object, 'illu'):
         bpy.types.Object.illu = bpy.props.PointerProperty(type=ILLUObjectProperties, override={'LIBRARY_OVERRIDABLE'}) #FIX Simplifier, supprimer le group de propriété
     if not hasattr( bpy.types.Scene, 'playback'):
@@ -468,11 +368,9 @@ def unregister():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
-    del bpy.types.ShaderNodeTexImage.illu
     del bpy.types.Object.illu
     del bpy.types.Scene.playback
 
-
     bpy.app.handlers.frame_change_post.remove(update_handler)
 
-    unregister_node_categories("SH_TESTING_NODES")
+    unregister_node_categories("ILLU_NODES")
