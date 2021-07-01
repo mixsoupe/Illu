@@ -202,8 +202,8 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
                     ('NodeGroupOutput', {'name':'Group Output'}),
                     ('ShaderNodeTexImage', {'name':'Image'}),
                     ('ShaderNodeSeparateRGB', {'name':'Separate'}),
-                    ('ShaderNodeMath', {'name':'Line', 'operation':'LESS_THAN'}),
-                    ('ShaderNodeMath', {'name':'Border', 'operation':'GREATER_THAN'}),                    
+                    ('ShaderNodeMath', {'name':'Line', 'operation':'GREATER_THAN'}),
+                    ('ShaderNodeMath', {'name':'Border', 'operation':'LESS_THAN'}),                    
                     ])
         self.addInputs([('NodeSocketVector', {'name':'Vector', 'default_value':(0.0, 0.0, 0.0)})])
         self.addOutputs([('NodeSocketFloat', {'name':'Shade'}),
