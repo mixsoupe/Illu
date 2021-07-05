@@ -432,5 +432,24 @@ class NodeHelper():
             for attr in outputitem[1]:
                 if attr in ['default_value', 'hide', 'hide_value', 'enabled']:
                     self.value_set(socket, attr, outputitem[1][attr])
-                else:
+                else:   
                     self.value_set(socketInterface, attr, outputitem[1][attr])
+
+def get_socket_value(this_node, socket):
+    for material in bpy.data.materials:
+        if material.node_tree is not None:
+            for node_tree in traverse_node_tree(material.node_tree):
+                for node in node_tree.nodes:
+                    if node == this_node.name
+                    if node == this_node:
+                        print (this_node)
+
+
+    links = socket.links
+    if not links:
+        return socket.default_value
+    else:
+        socket_name = links[0].from_socket
+        
+        return socket_name
+

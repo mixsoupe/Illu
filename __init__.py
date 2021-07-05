@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (0, 0, 6),
+    "version" : (0, 0, 7),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -140,11 +140,13 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
     image_name: bpy.props.StringProperty(
         name="Image Name",
         )    
-    objects: bpy.props.StringProperty(
+    objects: bpy.props.PointerProperty(
         name="Object",
+        type=bpy.types.Object,
         )
-    light: bpy.props.StringProperty(
+    light: bpy.props.PointerProperty(
         name="Light",
+        type=bpy.types.Object,
         )
     scale: bpy.props.FloatProperty(
         name = "Scale",
@@ -211,7 +213,10 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
                     ('ShaderNodeMath', {'name':'Line', 'operation':'GREATER_THAN'}),
                     ('ShaderNodeMath', {'name':'Border', 'operation':'LESS_THAN'}),                    
                     ])
-        self.addInputs([('NodeSocketVector', {'name':'Vector', 'default_value':(0.0, 0.0, 0.0)})])
+        self.addInputs([('NodeSocketObject', {'name':'Light'}), 
+                    ('NodeSocketVector', {'name':'Vector', 'default_value':(0.0, 0.0, 0.0)}),
+                        
+                    ])
         self.addOutputs([('NodeSocketFloat', {'name':'Shade'}),
                     ('NodeSocketFloat', {'name':'Distance Field'}),
                     ('NodeSocketFloat', {'name':'Border'}),
@@ -228,7 +233,7 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
                     ('nodes["Line"].outputs[0]', 'outputs[3]'),
                     ('nodes["Image"].outputs[1]', 'outputs[4]'),
                     ])
-        self.node_tree.inputs[0].hide_value = True
+        self.node_tree.inputs[1].hide_value = True
         self.node_tree.nodes['Line'].inputs[1].default_value = 0.5
         self.node_tree.nodes['Border'].inputs[1].default_value = 0.130
 
@@ -240,9 +245,9 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
 
         self.node_tree.nodes['Image'].image = image 
 
-    def draw_buttons(self, context, layout):
-        layout.prop_search(self, "objects", bpy.data, "objects")
-        layout.prop_search(self, "light", bpy.data, "objects")
+    def draw_buttons(self, context, layout):        
+        layout.prop(self, 'objects')
+        #layout.prop(self, "light")
         layout.prop(self, 'scale')
         layout.prop(self, 'depth_precision')
         layout.prop(self, 'angle')
@@ -309,9 +314,12 @@ class ILLU_OT_update_all(bpy.types.Operator):
 
 #FUNCTIONS
 def update_image(node):
-    obj = [bpy.data.objects[node.objects] ,] 
+    obj = [node.objects,]
     image_name = node.node_tree.nodes['Image'].image.name
-    light = bpy.data.objects[node.light]
+    #light = node.light
+    light = node.inputs[0].default_value
+    test = get_socket_value(node, node.inputs["Light"])
+    print (test)
     scale = node.scale
     depth_precision = node.depth_precision
     angle = node.angle
