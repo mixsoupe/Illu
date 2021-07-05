@@ -371,9 +371,9 @@ def upscale_factor():
 
     return factor
 
-def traverse_node_tree(note_tree):
-    yield note_tree
-    for node in note_tree.nodes:
+def traverse_node_tree(node_tree):
+    yield node_tree
+    for node in node_tree.nodes:
         if node.bl_idname =="ShaderNodeGroup":
             if node.node_tree is not None:
                 yield from traverse_node_tree(node.node_tree)
@@ -435,21 +435,26 @@ class NodeHelper():
                 else:   
                     self.value_set(socketInterface, attr, outputitem[1][attr])
 
-def get_socket_value(this_node, socket):
-    for material in bpy.data.materials:
-        if material.node_tree is not None:
-            for node_tree in traverse_node_tree(material.node_tree):
-                for node in node_tree.nodes:
-                    #if node == this_node.name
-                    if node == this_node:
-                        print (this_node)
-
-
+def get_socket_value(this_node, input):
+    socket = this_node.inputs[input]
     links = socket.links
     if not links:
         return socket.default_value
     else:
-        socket_name = links[0].from_socket
+        input_name = links[0].from_socket.name        
+        if links[0].from_node.bl_idname == "NodeGroupInput":
+            for material in bpy.data.materials:
+                if material.node_tree is not None:
+                    for node in material.node_tree.nodes:
+                        if node.bl_idname =="ShaderNodeGroup":
+                            for node_tree in traverse_node_tree(node.node_tree):
+                                for subnode in node_tree.nodes:                    
+                                    if subnode == this_node:
+                                        group = node
+                                        value = group.inputs[input_name].default_value
+                                        return value
+                                    
         
-        return socket_name
+
+                                    
 
