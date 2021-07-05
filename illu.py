@@ -30,6 +30,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     global dim_y
     dim_x, dim_y =  get_resolution()
     ratio = dim_x / dim_y
+    obj = [obj,]
     
     if ratio > 1:        
         dim_x = texture_size
@@ -133,8 +134,6 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
 
     #Enregistrement des images
     buffer_to_image( image_name, buffer, dim_x, dim_y)
-
-    #print((time.time() - T)*1000)
 
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
     vertices_shadow, indices_shadow, light, shadow_size, soft_shadow):
@@ -318,7 +317,10 @@ def bgl_base_render(offscreen, vertices, indices, colors):
             
 def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
     camera = bpy.context.scene.camera
-    light_angle = get_light_angle(light, camera) - angle
+    if light is not None:
+        light_angle = get_light_angle(light, camera) - angle
+    else:
+        light_angle = 90
 
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             

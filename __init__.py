@@ -217,7 +217,8 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
         
         image = bpy.data.images.new(self.node_tree.name, 2048, 2048) #FIX RESOLUTION
 
-        self.node_tree.nodes['Image'].image = image 
+        self.node_tree.nodes['Image'].image = image
+        self.node_tree.nodes['Image'].extension = "CLIP"
 
     def draw_buttons(self, context, layout):        
         layout.prop(self, 'objects')
@@ -262,12 +263,18 @@ class ILLU_OT_update(bpy.types.Operator):
     
     def execute(self, context):        
         node = context.active_node
-        if node.objects is not '':    
-            update_image(node)
+           
+        result = update_image(node)
+        material_name = context.material.name
+
+        if result:            
+            self.report({'INFO'}, '{} rendered'.format(material_name))    
+            return {'FINISHED'}
         else:
-            self.report({"WARNING"}, "Missing properties")
-            return {'CANCELLED'}        
-        return {'FINISHED'}
+            self.report({"WARNING"}, 'Render failed, missing properties')
+            return {'CANCELLED'}
+
+
 
 class ILLU_OT_update_all(bpy.types.Operator):
     """Update all images"""
@@ -275,49 +282,68 @@ class ILLU_OT_update_all(bpy.types.Operator):
     bl_label = "Update All"
 
     def execute(self, context):
-        update_all()
+        rendered, failed = update_all()
+        
+        print (failed)
+        if rendered:
+            self.report({'INFO'}, '{} rendered'.format(rendered))
+        if failed:
+            self.report({'WARNING'}, '{} render failed'.format(failed))  
         return {'FINISHED'}
 
 #FUNCTIONS
 def update_image(node):
-    obj = [node.objects,]
-    image_name = node.node_tree.nodes['Image'].image.name
-    texture_size = int(node.texture_size)
-    shadow_size = int(node.shadow_size)
-    self_shading = node.self_shading
-    bake_to_uvs = node.bake_to_uvs
-    light = get_socket_value(node, "Light")
-    scale = get_socket_value(node, "Scale")
-    depth_precision = get_socket_value(node, "Depth Precision")
-    angle = get_socket_value(node, "Angle Compensation")
-    soft_shadow = get_socket_value(node, "Soft Shadow")
-    line_scale = get_socket_value(node, "Line Scale")
-    noise_scale = get_socket_value(node, "Noise Scale")
-    noise_diffusion = get_socket_value(node, "Noise Diffusion") 
+    obj = node.objects
+    if obj is not None:
+        image_name = node.node_tree.nodes['Image'].image.name
+        texture_size = int(node.texture_size)
+        shadow_size = int(node.shadow_size)
+        self_shading = node.self_shading
+        bake_to_uvs = node.bake_to_uvs
+        light = get_socket_value(node, "Light")
+        scale = get_socket_value(node, "Scale")
+        depth_precision = get_socket_value(node, "Depth Precision")
+        angle = get_socket_value(node, "Angle Compensation")
+        soft_shadow = get_socket_value(node, "Soft Shadow")
+        line_scale = int(get_socket_value(node, "Line Scale"))
+        noise_scale = get_socket_value(node, "Noise Scale")
+        noise_diffusion = get_socket_value(node, "Noise Diffusion") 
 
-    generate_images(obj, 
-                    image_name, 
-                    light, 
-                    scale, 
-                    depth_precision, 
-                    angle, 
-                    texture_size, 
-                    shadow_size, 
-                    soft_shadow, 
-                    self_shading, 
-                    bake_to_uvs,
-                    line_scale, 
-                    noise_scale, 
-                    noise_diffusion
-                    )
+        
+        generate_images(obj, 
+                        image_name, 
+                        light, 
+                        scale, 
+                        depth_precision, 
+                        angle, 
+                        texture_size, 
+                        shadow_size, 
+                        soft_shadow, 
+                        self_shading, 
+                        bake_to_uvs,
+                        line_scale, 
+                        noise_scale, 
+                        noise_diffusion
+                        )
+        return True
 
 def update_all():
+    rendered = []
+    failed = []
     for material in bpy.data.materials:
         if material.node_tree is not None:
             for node_tree in traverse_node_tree(material.node_tree):
                 for node in node_tree.nodes:
                     if node.bl_idname == 'ILLU_2DShade':                 
-                        update_image(node)
+                        result = update_image(node)
+                        if result:
+                            rendered.append(material.name)
+                        else:
+                            failed.append(material.name)
+    
+    return rendered, failed
+
+
 
 @persistent
 def update_handler(dummy):
