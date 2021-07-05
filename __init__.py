@@ -297,9 +297,11 @@ def update_image(node):
 
     generate_images(obj, 
                     image_name, 
-                    light, scale, 
+                    light, 
+                    scale, 
                     depth_precision, 
-                    angle, texture_size, 
+                    angle, 
+                    texture_size, 
                     shadow_size, 
                     soft_shadow, 
                     self_shading, 
