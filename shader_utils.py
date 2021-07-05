@@ -440,7 +440,7 @@ def get_socket_value(this_node, socket):
         if material.node_tree is not None:
             for node_tree in traverse_node_tree(material.node_tree):
                 for node in node_tree.nodes:
-                    if node == this_node.name
+                    #if node == this_node.name
                     if node == this_node:
                         print (this_node)
 

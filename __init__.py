@@ -224,7 +224,7 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
                     ('NodeSocketFloat', {'name':'Alpha'}),
                     ])
         self.addLinks([('nodes["Image"].outputs[0]', 'nodes["Separate"].inputs[0]'),
-                    ('inputs[0]', 'nodes["Image"].inputs[0]'),
+                    ('inputs[1]', 'nodes["Image"].inputs[0]'),
                     ('nodes["Separate"].outputs[0]', 'outputs[0]'),
                     ('nodes["Separate"].outputs[1]', 'outputs[1]'),
                     ('nodes["Separate"].outputs[2]', 'nodes["Line"].inputs[0]'),
