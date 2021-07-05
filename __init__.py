@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (0, 0, 5),
+    "version" : (0, 0, 6),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -162,6 +162,12 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
         name = "Soft Shadow",
         default = 1.0,
         )
+    line_scale: bpy.props.IntProperty(
+        name = "Line Scale",
+        default = 1,
+        min = 0,
+        max = 10,
+        )   
     noise_scale: bpy.props.FloatProperty(
         name = "Noise Scale",
         default = 400.0,
@@ -241,6 +247,7 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
         layout.prop(self, 'depth_precision')
         layout.prop(self, 'angle')
         layout.prop(self, 'soft_shadow')
+        layout.prop(self, 'line_scale')
         layout.prop(self, 'noise_scale')
         layout.prop(self, 'noise_diffusion')
         layout.prop(self, 'texture_size')
@@ -313,6 +320,7 @@ def update_image(node):
     soft_shadow = node.soft_shadow
     self_shading = node.self_shading
     bake_to_uvs = node.bake_to_uvs
+    line_scale = node.line_scale
     noise_scale = node.noise_scale
     noise_diffusion = node.noise_diffusion   
 
@@ -324,7 +332,8 @@ def update_image(node):
                     shadow_size, 
                     soft_shadow, 
                     self_shading, 
-                    bake_to_uvs, 
+                    bake_to_uvs,
+                    line_scale, 
                     noise_scale, 
                     noise_diffusion
                     )

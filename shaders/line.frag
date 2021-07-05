@@ -1,6 +1,7 @@
 in vec2 vTexCoord;                
         
-uniform sampler2D Sampler;       
+uniform sampler2D Sampler;
+uniform int line_scale;          
 
 mat3 sx = mat3( 
     1.0, 2.0, 1.0, 
@@ -17,12 +18,11 @@ void main()
 {
     vec3 diffuse = texture(Sampler, vTexCoord.st).rgb;
     float alpha = texture(Sampler, vTexCoord.st).a;              
-    int thickness = 1;
 
     mat3 I;
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
-            vec4 sample  = texelFetch(Sampler, ivec2(gl_FragCoord) + ivec2(i-1,j-1)*thickness, 0 ).rgba;
+            vec4 sample  = texelFetch(Sampler, ivec2(gl_FragCoord) + ivec2(i-1,j-1)*line_scale, 0 ).rgba;
             if (sample.a == 0) {
                 I[i][j] = diffuse.b;
             } 

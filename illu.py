@@ -24,7 +24,7 @@ from mathutils import Matrix, Vector, Euler
 from . shader_utils import *
 
 #FIX Prévoir un overscan
-def generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading, bake_to_uvs, noise_scale, noise_diffusion):
+def generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading, bake_to_uvs, line_scale, noise_scale, noise_diffusion):
     T = time.time()
     global dim_x
     global dim_y
@@ -81,7 +81,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
                 merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1", dim_x, dim_y)
                 
             #Ajouter le trait
-            bgl_filter_line(base_buffer)
+            bgl_filter_line(base_buffer, line_scale)
 
             #Noise
                       
@@ -468,7 +468,7 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple 
           
 
 
-def bgl_filter_line(offscreen_A):     
+def bgl_filter_line(offscreen_A, line_scale):     
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "line.frag")                        
@@ -482,6 +482,7 @@ def bgl_filter_line(offscreen_A):
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_int("line_scale", line_scale)
             batch.draw(shader)
 
     copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
