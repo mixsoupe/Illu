@@ -313,7 +313,7 @@ def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
     if light is not None:
         light_angle = get_light_angle(light, camera) - angle
     else:
-        light_angle = 90
+        light_angle = 90 - angle
 
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
