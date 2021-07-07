@@ -47,9 +47,13 @@ void main()
     st *= scale;
     st += seed;
 
-    float noise = snoise(st)+0.5;
+    float noise_x = snoise(st+seed)+0.5;
+    float noise_y = snoise(st+seed+987)+0.5;
     
-    float offset = mix(-amplitude, amplitude, noise);
+    float offset_x = mix(-amplitude, amplitude, noise_x);
+    float offset_y = mix(-amplitude, amplitude, noise_y);
+
+    vec2 offset = vec2(offset_x, offset_y);
 
     vec4 final_color = texture(Sampler, vTexCoord + offset);
 
