@@ -168,6 +168,10 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
         name="Bake to UVs",
         default = False
         )
+    override: bpy.props.BoolProperty(
+        name="Override",
+        default = False
+        )
 
     def _new_node_tree(self):
         nt_name= '.' + self.bl_name + '_nodetree'
@@ -385,6 +389,7 @@ def unregister():
         unregister_class(cls)
     del bpy.types.Object.illu
     del bpy.types.Scene.playback
+
 
     bpy.app.handlers.frame_change_post.remove(update_handler)
 
