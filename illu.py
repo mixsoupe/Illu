@@ -160,7 +160,10 @@ def bgl_shadow(shadow_buffer, vertices, indices, colors,
     rotation_matrices = soft_shadow_pattern(soft_shadow)
     for i, mat in enumerate(rotation_matrices):
         #Light matrix
-        light_matrix = light.matrix_world.inverted()
+        if light:
+            light_matrix = light.matrix_world.inverted()
+        else:
+            light_matrix = Matrix.Identity(4)
 
         #Light jittering matrix
         light_jitter_matrix = mat @ light_matrix
