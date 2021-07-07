@@ -180,8 +180,8 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
                     ('NodeGroupOutput', {'name':'Group Output'}),
                     ('ShaderNodeTexImage', {'name':'Image'}),
                     ('ShaderNodeSeparateRGB', {'name':'Separate'}),
-                    ('ShaderNodeMath', {'name':'Line', 'operation':'GREATER_THAN'}),
-                    ('ShaderNodeMath', {'name':'Border', 'operation':'LESS_THAN'}),                    
+                    ('ShaderNodeMapRange', {'name':'Line'}),
+                    ('ShaderNodeMapRange', {'name':'Border'}),                    
                     ])
         self.addInputs([
                     ('NodeSocketObject', {'name':'Light'}),
@@ -213,7 +213,10 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
                     ])
         self.node_tree.inputs["Vector"].hide_value = True
         self.node_tree.nodes['Line'].inputs[1].default_value = 0.5
-        self.node_tree.nodes['Border'].inputs[1].default_value = 0.130
+        self.node_tree.nodes['Line'].inputs[2].default_value = 1.0
+        self.node_tree.nodes['Border'].inputs[2].default_value = 0.212
+        self.node_tree.nodes['Border'].inputs[3].default_value = 1.0
+        self.node_tree.nodes['Border'].inputs[4].default_value = 0.0
 
     def new_image(self):
         if self.node_tree.name in bpy.data.images:
