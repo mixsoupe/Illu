@@ -315,7 +315,6 @@ def update_image(node):
         line_scale = int(get_socket_value(node, "Line Scale"))
         noise_scale = get_socket_value(node, "Noise Scale")
         noise_diffusion = get_socket_value(node, "Noise Diffusion") 
-
         
         generate_images(obj, 
                         image_name, 
@@ -341,7 +340,7 @@ def update_all():
         if material.node_tree is not None:
             for node_tree in traverse_node_tree(material.node_tree):
                 for node in node_tree.nodes:
-                    if node.bl_idname == 'ILLU_2DShade':                 
+                    if node.bl_idname == 'ILLU_2DShade':              
                         result = update_image(node)
                         if result:
                             rendered.append(material.name)
@@ -354,7 +353,8 @@ def update_all():
 
 @persistent
 def update_handler(dummy):
-    if bpy.context.scene.playback:
+    print ("test")
+    if bpy.context.scene.playback:        
         update_all()
 
 #REGISTER UNREGISTER

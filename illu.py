@@ -91,9 +91,12 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
             
         #Check
         valid = valid_check(base_buffer)
-
+        
         if valid:
             break
+        
+    if not valid:
+        print ("render failed") 
 
     #Bake  
     if bake_to_uvs:
