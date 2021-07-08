@@ -441,18 +441,19 @@ def get_socket_value(this_node, input):
     if not links:
         return socket.default_value
     else:
-        input_name = links[0].from_socket.name        
+        input_name = links[0].from_socket.name       
         if links[0].from_node.bl_idname == "NodeGroupInput":
             for material in bpy.data.materials:
                 if material.node_tree is not None:
                     for node in material.node_tree.nodes:
                         if node.bl_idname =="ShaderNodeGroup":
-                            for node_tree in traverse_node_tree(node.node_tree):
-                                for subnode in node_tree.nodes:                    
-                                    if subnode == this_node:
-                                        group = node
-                                        value = group.inputs[input_name].default_value
-                                        return value
+                            if node.node_tree is not None:
+                                for node_tree in traverse_node_tree(node.node_tree):                                    
+                                    for subnode in node_tree.nodes:                    
+                                        if subnode == this_node:
+                                            group = node
+                                            value = group.inputs[input_name].default_value
+                                            return value
                                     
         
 
