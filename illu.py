@@ -399,7 +399,6 @@ def bgl_filter_distance_field(offscreen_A, scale,  factor = True):
             shader.uniform_float("Offset", offset)
             shader.uniform_int("factor", factor)
             batch.draw(shader)
-               
     #LOOP VERTICAL
     offset = (0, step / dim_y)     
     for i in range(iteration):
