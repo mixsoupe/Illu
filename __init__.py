@@ -349,8 +349,6 @@ def update_all():
     
     return rendered, failed
 
-
-
 @persistent
 def update_handler(dummy):
     if bpy.context.scene.playback:        
