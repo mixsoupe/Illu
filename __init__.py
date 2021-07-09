@@ -353,7 +353,6 @@ def update_all():
 
 @persistent
 def update_handler(dummy):
-    print ("test")
     if bpy.context.scene.playback:        
         update_all()
 
