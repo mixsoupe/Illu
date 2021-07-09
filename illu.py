@@ -39,9 +39,9 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         dim_y = texture_size
         dim_x = int(dim_y * ratio)
     
-    for i in range(10):
+    for i in range(20):
         base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-        base_buffer_copy = gpu.types.GPUOffScreen(dim_x, dim_y)
+        sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
         erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
         shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
@@ -54,41 +54,47 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
             vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs) 
             bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow)         
         
-
         #Base render
         bgl_base_render(base_buffer, vertices, indices, colors)
         
-        bgl_filter_expand(base_buffer, dim_x, dim_y, 3)
+        if self_shading:
+            bgl_filter_expand(base_buffer, dim_x, dim_y, 3)
         bgl_filter_sss(base_buffer, samples = 20, radius = 10, simple = True, channel = 1)
         
-        copy_buffer(base_buffer, base_buffer_copy, dim_x, dim_y)
-        
-        #Distance field buffer (transparence)                
-        bgl_filter_distance_field(base_buffer_copy, scale)
-        bgl_filter_sss(base_buffer_copy, samples = 20, radius = 10, simple = True)
-        bgl_filter_expand(base_buffer_copy, dim_x, dim_y, -4)        
-        merge_buffers(base_buffer_copy, base_buffer, "merge_a1toa0", dim_x, dim_y)
-        bgl_filter_sss(base_buffer_copy, samples = 20, radius = 2, simple = True) 
+        #Distance field buffer (transparence)
+        copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)               
+        bgl_filter_distance_field(sdf_buffer, scale)
+        bgl_filter_sss(sdf_buffer, samples = 20, radius = 10, simple = True)
+        bgl_filter_expand(sdf_buffer, dim_x, dim_y, -4)        
+        merge_buffers(sdf_buffer, base_buffer, "merge_SDF_pre", dim_x, dim_y)
+        bgl_filter_sss(sdf_buffer, samples = 20, radius = 2, simple = True) 
 
-        merge_buffers(base_buffer, base_buffer_copy, "merge_r1tog0", dim_x, dim_y)  
+        merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
         
         #Decal (shading)
         if self_shading:   
             bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
             bgl_filter_sss(base_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), mask = False)
 
-        #Merge Shadow             
-        if len(shadow_objs) > 0:
-            merge_buffers(base_buffer, shadow_buffer, "merge_r0dotr1", dim_x, dim_y)
-            
         #Ajouter le trait
         bgl_filter_line(base_buffer, line_scale)
 
-        #Noise                      
-        copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
-        bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)       
-        merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
+        #Merge Shadow             
+        if len(shadow_objs) > 0:
+            if self_shading:
+                merge_buffers(base_buffer, shadow_buffer, "merge_shadow", dim_x, dim_y)
+            else:
+                merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
             
+        #Noise
+        copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
+        bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)  
+        if self_shading:    
+            merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
+        else:
+            merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
+        
+
         #Check
         valid = valid_check(base_buffer)
         
@@ -121,7 +127,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     
     #Suppression des buffers
     shadow_buffer.free()               
-    base_buffer_copy.free()
+    sdf_buffer.free()
     erosion_buffer.free()
     base_buffer.free()
 
