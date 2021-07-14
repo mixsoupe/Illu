@@ -232,7 +232,7 @@ def get_shadow_objects(exclude):
     shadow_objs = []
 
     
-    for obj in bpy.data.objects:
+    for obj in bpy.context.objects:
         if obj != exclude[0]:
             if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:
                 shadow_objs.append(obj)
@@ -454,8 +454,5 @@ def get_socket_value(this_node, input):
                                             group = node
                                             value = group.inputs[input_name].default_value
                                             return value
-                                    
-        
-
-                                    
+                
 
