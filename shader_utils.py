@@ -231,8 +231,7 @@ def get_shadow_objects(exclude):
      #Récupérer tous les objets de la scène qui ont un option "Cast Shadow" activée, mais pas l'objet
     shadow_objs = []
 
-    
-    for obj in bpy.context.objects:
+    for obj in bpy.context.scene.objects:
         if obj != exclude[0]:
             if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:
                 shadow_objs.append(obj)

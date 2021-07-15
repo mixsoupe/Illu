@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 0, 2),
+    "version" : (1, 0, 3),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -336,16 +336,24 @@ def update_image(node):
 def update_all():
     rendered = []
     failed = []
+    scene_materials = []
+    for obj in bpy.context.scene.objects:
+        for slot in obj.material_slots:
+            material = slot.material
+            if material:
+                scene_materials.append(material)            
+
     for material in bpy.data.materials:
-        if material.node_tree is not None:
-            for node_tree in traverse_node_tree(material.node_tree):
-                for node in node_tree.nodes:
-                    if node.bl_idname == 'ILLU_2DShade':              
-                        result = update_image(node)
-                        if result:
-                            rendered.append(material.name)
-                        else:
-                            failed.append(material.name)
+        if material in scene_materials:
+            if material.node_tree is not None:
+                for node_tree in traverse_node_tree(material.node_tree):
+                    for node in node_tree.nodes:
+                        if node.bl_idname == 'ILLU_2DShade':              
+                            result = update_image(node)
+                            if result:
+                                rendered.append(material.name)
+                            else:
+                                failed.append(material.name)
     
     return rendered, failed
 
