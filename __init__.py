@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 0, 4),
+    "version" : (1, 0, 5),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -250,9 +250,8 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
     def free(self):
         bpy.data.images.remove(bpy.data.images[self.node_tree.name])        
         bpy.data.node_groups.remove(self.node_tree, do_unlink=True)
-        
-        
-           
+
+            
 #OPERATORS
 class ILLU_OT_update(bpy.types.Operator):
     """Update image"""
@@ -282,12 +281,11 @@ class ILLU_OT_update(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-
 class ILLU_OT_update_all(bpy.types.Operator):
     """Update all images"""
     bl_idname = "illu.update_all"
     bl_label = "Update All"
-
+    
     def execute(self, context):
         rendered, failed = update_all()
         
@@ -296,6 +294,7 @@ class ILLU_OT_update_all(bpy.types.Operator):
             self.report({'INFO'}, '{} rendered'.format(rendered))
         if failed:
             self.report({'WARNING'}, '{} render failed'.format(failed))  
+
         return {'FINISHED'}
 
 #FUNCTIONS
@@ -331,6 +330,7 @@ def update_image(node):
                         noise_scale, 
                         noise_diffusion
                         )
+        
         return True
 
 def update_all():
