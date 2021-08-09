@@ -1,7 +1,10 @@
 in vec2 vTexCoord;
-uniform sampler2D Sampler;
 
+uniform sampler2D Sampler;
 uniform vec2 step;
+uniform int mask;
+uniform int simple;
+uniform int channel;
 
 //generate noise
 float random (vec2 st) {
@@ -23,7 +26,6 @@ void main()
     vec4 colorBase = texture(Sampler, vTexCoord).rgba;    
     vec2 colorM = texture(Sampler, vTexCoord).rg;
     float depthM = texture(Sampler, vTexCoord).b + texture(Sampler, vTexCoord).a;
-    float intensityM = texture(Sampler, vTexCoord).g;
 
     //float depthM = (gl_FragCoord.z / gl_FragCoord.w);
     
@@ -36,8 +38,9 @@ void main()
     //     step = sssStrength * gaussianWidth * pixelSize * dir
     // The closer the pixel, the stronger the effect needs to be, hence
     // the factor 1.0 / depthM.        
-    vec2 finalStep = texture(Sampler, vTexCoord).a * step * (intensityM + 0.05); // TODO / depthM;
     
+    vec2 finalStep = texture(Sampler, vTexCoord).a * step; // TODO / depthM;
+
     // Accumulate the other samples:
     for (int i = 0; i < 6; i++) {
         // Fetch color and depth for current sample:
@@ -47,7 +50,18 @@ void main()
         float intensity = texture(Sampler, offset).g;
         
         float correction = 12;
-        
+
+        if (mask == 1){
+            //Sur le contour, le flou ne tient pas compte de la profondeur
+            correction *= (1 + intensity - texture(Sampler, offset).a);
+        }
+
+        if (simple == 1){
+            // simple blur. FIX Optimiser en mettant la condition en amont
+            correction = 1; 
+        }
+
+
         // If the difference in depth is huge, we lerp color back to "colorM":
         float s = min(correction * abs(depthM - depth), 1.0);        
 
@@ -56,8 +70,11 @@ void main()
         // Accumulate:
         colorBlurred += w[i] * color;
     }
-        
-    gl_FragColor = vec4(colorBlurred.x, colorBlurred.y, colorBase.b, colorBase.a);
-
-
+    
+    if (channel == 0){
+    gl_FragColor = vec4(colorBlurred.x, colorBase.g, colorBase.b, colorBase.a);
+    }
+    if (channel == 1){
+    gl_FragColor = vec4(colorBase.r, colorBlurred.y, colorBase.b, colorBase.a);
+    }
 }
