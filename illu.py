@@ -39,12 +39,12 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         dim_y = texture_size
         dim_x = int(dim_y * ratio)
     
-    for i in range(20):
-        base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-        sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-        erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-        shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
+    for i in range(20):
         #Creation du modele        
         vertices, indices, colors, uvs, uv_indices, loop_indices = build_model(obj, get_uv = True)
         
@@ -86,25 +86,24 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
             else:
                 merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
             
-        #Noise
+        #Noise        
         copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
         bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)  
         if self_shading:    
             merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
         else:
             merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
-        
 
         #Check
         valid = valid_check(base_buffer)
-        
+                
         if valid:
             break
         
     if not valid:
         print ("render failed") 
 
-    #Bake  
+    #Bake    
     if bake_to_uvs:
         bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)           
         bake_to_texture(base_buffer, bake_buffer, vertices, uvs, uv_indices, loop_indices)
@@ -133,7 +132,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
 
     #Enregistrement des images
     buffer_to_image( image_name, buffer, dim_x, dim_y)
-
+    
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
     vertices_shadow, indices_shadow, light, shadow_size, soft_shadow):
 
