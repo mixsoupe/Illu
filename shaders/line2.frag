@@ -22,7 +22,7 @@ void main()
     mat3 I;
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
-            vec4 sample  = texelFetch(Sampler, ivec2(gl_FragCoord) + ivec2(i-1,j-1)*line_scale*2, 0 ).rgba;
+            vec4 sample  = texelFetch(Sampler, ivec2(gl_FragCoord) + ivec2(i-1,j-1)*line_scale*1, 0 ).rgba;
             if (sample.a == 0) {
                 I[i][j] = diffuse.b;
             }
@@ -43,7 +43,7 @@ float gy = dot(sy[0], I[0]) + dot(sy[1], I[1]) + dot(sy[2], I[2]);
 float g = sqrt(pow(gx, 2.0)+pow(gy, 2.0));
 
 // Try different values and see what happens
-g = smoothstep(0.1, 0.4, g); // DEFAULT 0.1, 0.4
+g = smoothstep(0.0, 1.0, g); // DEFAULT 0.1, 0.4
 
 gl_FragColor = vec4(diffuse.r, diffuse.g, g, alpha);
 
