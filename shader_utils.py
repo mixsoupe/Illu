@@ -270,6 +270,9 @@ def copy_buffer(source, target, dim_x, dim_y):
     shader = compile_shader("image2d.vert", "copy_buffer.frag")
     batch = batch2d(shader, dim_x, dim_y)
 
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
+
     with target.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, source.color_texture)            

@@ -44,65 +44,67 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
-    for i in range(20):
-        #Creation du modele        
-        vertices, indices, colors, uvs, uv_indices, loop_indices = build_model(obj, get_uv = True)
-        
-        #Shadow Buffer
-        shadow_objs = get_shadow_objects(exclude = obj)
-        if len(shadow_objs) > 0:
-            vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs) 
-            bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow)         
-        
-        #Base render
-        bgl_base_render(base_buffer, vertices, indices, colors)
-        
+    #for i in range(1):
+    #Creation du modele        
+    vertices, indices, colors, uvs, uv_indices, loop_indices = build_model(obj, get_uv = True)
+    
+    #Shadow Buffer
+    shadow_objs = get_shadow_objects(exclude = obj)
+    if len(shadow_objs) > 0:
+        vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs) 
+        bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow)         
+    
+    #Base render
+    bgl_base_render(base_buffer, vertices, indices, colors)
+    
+    if self_shading:
+        bgl_filter_expand(base_buffer, dim_x, dim_y, 3)
+    bgl_filter_sss(base_buffer, samples = 20, radius = 10, simple = True, channel = 1)
+    
+    #Distance field buffer (transparence)
+    copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)               
+    bgl_filter_distance_field(sdf_buffer, scale)
+    copy_buffer(sdf_buffer, base_buffer, dim_x, dim_y) #DEBUG
+    
+    bgl_filter_sss(sdf_buffer, samples = 20, radius = 10, simple = True)
+    bgl_filter_expand(sdf_buffer, dim_x, dim_y, -4)        
+    merge_buffers(sdf_buffer, base_buffer, "merge_SDF_pre", dim_x, dim_y)
+    bgl_filter_sss(sdf_buffer, samples = 20, radius = 2, simple = True) 
+
+    merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
+    
+    #Decal (shading)
+    if self_shading:   
+        bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
+        bgl_filter_sss(base_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), mask = False)
+
+    #Ajouter le trait
+    bgl_filter_line(base_buffer, line_scale)
+
+    #Merge Shadow             
+    if len(shadow_objs) > 0:
         if self_shading:
-            bgl_filter_expand(base_buffer, dim_x, dim_y, 3)
-        bgl_filter_sss(base_buffer, samples = 20, radius = 10, simple = True, channel = 1)
-        
-        #Distance field buffer (transparence)
-        copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)               
-        bgl_filter_distance_field(sdf_buffer, scale)
-        bgl_filter_sss(sdf_buffer, samples = 20, radius = 10, simple = True)
-        bgl_filter_expand(sdf_buffer, dim_x, dim_y, -4)        
-        merge_buffers(sdf_buffer, base_buffer, "merge_SDF_pre", dim_x, dim_y)
-        bgl_filter_sss(sdf_buffer, samples = 20, radius = 2, simple = True) 
-
-        merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
-        
-        #Decal (shading)
-        if self_shading:   
-            bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
-            bgl_filter_sss(base_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), mask = False)
-
-        #Ajouter le trait
-        bgl_filter_line(base_buffer, line_scale)
-
-        #Merge Shadow             
-        if len(shadow_objs) > 0:
-            if self_shading:
-                merge_buffers(base_buffer, shadow_buffer, "merge_shadow", dim_x, dim_y)
-            else:
-                merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
-            
-        #Noise        
-        copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
-        bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)  
-        if self_shading:    
-            merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
+            merge_buffers(base_buffer, shadow_buffer, "merge_shadow", dim_x, dim_y)
         else:
-            merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
-
-        #Check
-        valid = valid_check(base_buffer)
-                
-        if valid:
-            break
+            merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
+        
+    #Noise        
+    copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
+    bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)  
+    if self_shading:    
+        merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
+    else:
+        merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
+    """
+    #Check
+    valid = valid_check(base_buffer)
+            
+    if valid:
+        break
         
     if not valid:
         print ("render failed") 
-
+    """
     #Bake    
     if bake_to_uvs:
         bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)           
