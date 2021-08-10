@@ -44,7 +44,6 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
-    #for i in range(1):
     #Creation du modele        
     vertices, indices, colors, uvs, uv_indices, loop_indices = build_model(obj, get_uv = True)
     
@@ -95,16 +94,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
-    """
-    #Check
-    valid = valid_check(base_buffer)
-            
-    if valid:
-        break
-        
-    if not valid:
-        print ("render failed") 
-    """
+
     #Bake    
     if bake_to_uvs:
         bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)           
