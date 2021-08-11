@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 0, 7),
+    "version" : (1, 0, 8),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -383,7 +383,7 @@ def update(all = False):
 @persistent
 def update_handler(dummy):
     if bpy.context.scene.playback:        
-        update_all()
+        update(all = True)
 
 #REGISTER UNREGISTER
 classes = (
