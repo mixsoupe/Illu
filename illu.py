@@ -61,6 +61,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     """
     if self_shading:
         bgl_filter_expand(base_buffer, dim_x, dim_y, 3)
+    
     bgl_filter_sss(base_buffer, samples = 20, radius = 10, simple = True, channel = 1)
     
     #Distance field buffer (transparence)
@@ -321,7 +322,7 @@ def bgl_depth_render(offscreen, vertices, indices, colors):
     projection_matrix = change_camera_matrix(camera, dim_x, dim_y)
 
     shader =  compile_shader("depth.vert", "depth.frag")
-    batch = batch_for_shader(shader, 'TRIS', {"pos": vertices, "color": colors}, indices=indices)   
+    batch = batch_for_shader(shader, 'TRIS', {"pos": vertices}, indices=indices)   
 
     with offscreen.bind():
         

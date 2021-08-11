@@ -324,6 +324,8 @@ def build_model2(objects, get_uv = False):
     depth_B = np.modf(depth_A)[0]*255
     depth_C = np.modf(depth_B)[0]*255
 
+    
+
     depth_A /= 255
     depth_B /= 255
     depth_C /= 255
