@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 0, 6),
+    "version" : (1, 0, 7),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -106,6 +106,7 @@ class ILLU_PT_view3d_ui(bpy.types.Panel):
                 layout.prop(illu, "cast_shadow")
         layout.prop(context.scene, "playback")
         layout.operator("illu.update_all")
+        layout.operator("illu.update_selected")
 
 class ILLU_PT_object_ui(bpy.types.Panel):
     bl_label = "Illu"
@@ -287,7 +288,23 @@ class ILLU_OT_update_all(bpy.types.Operator):
     bl_label = "Update All"
     
     def execute(self, context):
-        rendered, failed = update_all()
+        rendered, failed = update(all = True)
+        
+        print (failed)
+        if rendered:
+            self.report({'INFO'}, '{} rendered'.format(rendered))
+        if failed:
+            self.report({'WARNING'}, '{} render failed'.format(failed))  
+
+        return {'FINISHED'}
+
+class ILLU_OT_update_selected(bpy.types.Operator):
+    """Update selected"""
+    bl_idname = "illu.update_selected"
+    bl_label = "Update Selected"
+    
+    def execute(self, context):
+        rendered, failed = update()
         
         print (failed)
         if rendered:
@@ -333,15 +350,21 @@ def update_image(node):
         
         return True
 
-def update_all():
+def update(all = False):
     rendered = []
     failed = []
-    scene_materials = []
-    for obj in bpy.context.scene.objects:
+    scene_materials = []    
+
+    if all:
+        objs = bpy.context.scene.objects
+    else:        
+        objs = bpy.context.selected_objects
+    
+    for obj in objs:
         for slot in obj.material_slots:
             material = slot.material
             if material:
-                scene_materials.append(material)            
+                scene_materials.append(material)
 
     for material in bpy.data.materials:
         if material in scene_materials:
@@ -370,6 +393,7 @@ classes = (
     ILLU_PT_object_ui,
     ILLU_OT_update, 
     ILLU_OT_update_all,
+    ILLU_OT_update_selected,
     ILLU_2DShade,
     )
 
