@@ -215,7 +215,11 @@ def build_model(objects, get_uv = False):
     else:
         weights = np.ones(len(mesh.vertices))
 
-    color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, depth, np.ones(len(mesh.vertices)) ]
+    #Calcul des normales
+    camera_vector = camera.matrix_world.to_quaternion() @ Vector((0.0, 0.0, 1.0))
+    normals_to_camera = np.dot(normales, camera_vector)
+
+    color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
     color_rgba = color_rgba.tolist()
         
     #Nettoyage

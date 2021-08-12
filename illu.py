@@ -83,6 +83,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     """
     #Ajouter le trait
     bgl_filter_line2(base_buffer, depth_buffer, line_scale)
+
     """
     #Merge Shadow             
     if len(shadow_objs) > 0:
