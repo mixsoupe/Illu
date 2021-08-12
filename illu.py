@@ -46,7 +46,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
     #Creation du modele        
-    vertices, indices, colors, uvs, uv_indices, loop_indices = build_model2(obj, get_uv = True)
+    vertices, indices, colors, uvs, uv_indices, loop_indices = build_model(obj, get_uv = True)
     
     #Shadow Buffer
     shadow_objs = get_shadow_objects(exclude = obj)
@@ -55,8 +55,8 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow)         
     
     #Base render
-    #bgl_base_render(base_buffer, vertices, indices, colors)
-    bgl_depth_render(base_buffer, vertices, indices, colors)
+    bgl_base_render(base_buffer, vertices, indices, colors)
+    bgl_depth_render(depth_buffer, vertices, indices, colors)
     
     """
     if self_shading:
@@ -82,7 +82,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_filter_sss(base_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), mask = False)
     """
     #Ajouter le trait
-    #bgl_filter_line2(base_buffer, line_scale)
+    bgl_filter_line2(base_buffer, depth_buffer, line_scale)
     """
     #Merge Shadow             
     if len(shadow_objs) > 0:
@@ -520,7 +520,7 @@ def bgl_filter_line(offscreen_A, line_scale):
     offscreen_B.free()
 
 
-def bgl_filter_line2(offscreen_A, line_scale):     
+def bgl_filter_line2(offscreen_A, depth_buffer, line_scale):     
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "line2.frag")                        
@@ -531,9 +531,12 @@ def bgl_filter_line2(offscreen_A, line_scale):
     
     with offscreen_B.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
+            bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, depth_buffer.color_texture)               
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_int("Depth_buffer", 1)
             shader.uniform_int("line_scale", line_scale)
             batch.draw(shader)
 
