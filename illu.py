@@ -63,7 +63,6 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     #Distance field buffer (transparence)
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)               
     bgl_filter_distance_field(sdf_buffer, scale)
-    copy_buffer(sdf_buffer, base_buffer, dim_x, dim_y) #DEBUG
     
     bgl_filter_sss(sdf_buffer, samples = 20, radius = 10, simple = True)
     bgl_filter_expand(sdf_buffer, dim_x, dim_y, -4)        
