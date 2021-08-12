@@ -89,7 +89,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     #Noise        
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
     bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)  
-    if self_shading:    
+    if self_shading:   
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)

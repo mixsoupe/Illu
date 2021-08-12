@@ -9,5 +9,6 @@ void main()
 
     float merge = (color0.b + color1.a)/2;
 
-    gl_FragColor = vec4(color1.r, color1.g, merge, 1.0);
+    //gl_FragColor = vec4(color1.r, color1.g, merge, 1.0);
+    gl_FragColor = vec4(color0.r, color1.g, merge, 1.0);
 }
