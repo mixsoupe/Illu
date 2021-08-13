@@ -79,7 +79,7 @@ void main()
     //g = smoothstep(0.2, 0.3, g*2000); // DEFAULT 0.1, 0.4
     n = smoothstep(0.0, 1.0, n); // DEFAULT 0.1, 0.4
 
-    d *= 1000;
+    d *= 1000 * (1-center_depth*30);
     d *= n*10;
     
 
