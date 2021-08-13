@@ -455,7 +455,7 @@ def bgl_filter_distance_field(offscreen_A, scale,  factor = True):
     offscreen_B.free()
 
 
-def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, mask = False, simple = False, channel = 0):
+def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_precision = 50, channel = 0):
     """
     Flou en tenant compte de la couche de profondeur
     R = Valeur d'entrée
@@ -463,6 +463,7 @@ def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, mask = 
     B = Z depth
     A = Alpha
     """
+    #channel = (1, 0, 0)
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
       
     shader = compile_shader("image2d.vert", "sss.frag")                        
@@ -483,8 +484,7 @@ def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, mask = 
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_int("Depth", 1)
                 shader.uniform_float("step", step)
-                shader.uniform_int("mask", mask)
-                shader.uniform_int("simple", simple)
+                shader.uniform_float("depth_precision", depth_precision)
                 shader.uniform_int("channel", channel)
                 batch.draw(shader)
                 step = (0 / dim_x * radius,1 / dim_y * radius)
@@ -499,8 +499,7 @@ def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, mask = 
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_int("Depth", 1)
                 shader.uniform_float("step", step)
-                shader.uniform_int("mask", mask)
-                shader.uniform_int("simple", simple)
+                shader.uniform_float("depth_precision", depth_precision)
                 shader.uniform_int("channel", channel)
                 batch.draw(shader)
 

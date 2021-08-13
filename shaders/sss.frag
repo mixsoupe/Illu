@@ -3,8 +3,7 @@ in vec2 vTexCoord;
 uniform sampler2D Sampler;
 uniform sampler2D Depth;
 uniform vec2 step;
-uniform int mask;
-uniform int simple;
+uniform float depth_precision;
 uniform int channel;
 
 //32bits converion
@@ -30,13 +29,12 @@ void main()
     
     // Fetch color and linear depth for current pixel
     vec4 colorBase = texture(Sampler, vTexCoord).rgba;    
-    vec2 colorM = texture(Sampler, vTexCoord).rg;
-    //float depthM = texture(Sampler, vTexCoord).b + texture(Sampler, vTexCoord).a;
+    vec3 colorM = texture(Sampler, vTexCoord).rgb;
     float depthM = convert32(texture(Depth, vTexCoord).rgb); //+ texture(Sampler, vTexCoord).a;
 
     
     // Accumulate center sample, multiplying it with its gaussian weight
-    vec2 colorBlurred = colorM;
+    vec3 colorBlurred = colorM;
     colorBlurred *= 0.382;
     
     // Calculate the step that we will use to fetch the surrounding pixels,
@@ -51,27 +49,11 @@ void main()
     for (int i = 0; i < 6; i++) {
         // Fetch color and depth for current sample:
         vec2 offset = vTexCoord + o[i] * finalStep;
-        vec2 color = texture(Sampler, offset).rg;
-        //float depth = texture(Sampler, offset).b + texture(Sampler, offset).a;
+        vec3 color = texture(Sampler, offset).rgb;
         float depth = convert32(texture(Depth, offset).rgb);
-
-        float intensity = texture(Sampler, offset).g;
         
-        float correction = 50;
-
-        if (mask == 1){
-            //Sur le contour, le flou ne tient pas compte de la profondeur
-            correction *= (1 + intensity - texture(Sampler, offset).a);
-        }
-
-        if (simple == 1){
-            // simple blur. FIX Optimiser en mettant la condition en amont
-            correction = 1; 
-        }
-
-
         // If the difference in depth is huge, we lerp color back to "colorM":
-        float s = min(correction * abs(depthM - depth), 1.0);        
+        float s = min(depth_precision * abs(depthM - depth), 1.0);        
 
         color = mix(color, colorM, s);
 
@@ -84,5 +66,8 @@ void main()
     }
     if (channel == 1){
     gl_FragColor = vec4(colorBase.r, colorBlurred.y, colorBase.b, colorBase.a);
+    }
+    if (channel == 2){
+    gl_FragColor = vec4(colorBase.r, colorBase.g, colorBlurred.z, colorBase.a);
     }
 }
