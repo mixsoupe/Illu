@@ -81,7 +81,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         bgl_filter_sss(base_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), mask = False)
     """
     #Ajouter le trait
-    bgl_filter_line2(base_buffer, depth_buffer, line_scale)
+    bgl_filter_line(base_buffer, depth_buffer, line_scale)
 
     """
     #Merge Shadow             
@@ -498,32 +498,11 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple 
 
     offscreen_B.free()
 
-def bgl_filter_line(offscreen_A, line_scale):     
+
+def bgl_filter_line(offscreen_A, depth_buffer, line_scale):     
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "line.frag")                        
-    batch = batch2d(shader, dim_x, dim_y)
-
-    with gpu.matrix.push_pop():
-        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
-    
-    with offscreen_B.bind():                   
-            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
-            shader.bind()
-            shader.uniform_int("Sampler", 0)
-            shader.uniform_int("line_scale", line_scale)
-            batch.draw(shader)
-
-    copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
-
-    offscreen_B.free()
-
-
-def bgl_filter_line2(offscreen_A, depth_buffer, line_scale):     
-    offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
-            
-    shader = compile_shader("image2d.vert", "line2.frag")                        
     batch = batch2d(shader, dim_x, dim_y)
 
     with gpu.matrix.push_pop():
