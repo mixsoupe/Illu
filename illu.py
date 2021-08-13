@@ -40,6 +40,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         dim_x = int(dim_y * ratio)
     
     base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    depth_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
@@ -55,9 +56,12 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     
     #Base render
     bgl_base_render(base_buffer, vertices, indices, colors)
+    bgl_depth_render(depth_buffer, vertices, indices, colors)
     
+    """
     if self_shading:
         bgl_filter_expand(base_buffer, dim_x, dim_y, 3)
+    
     bgl_filter_sss(base_buffer, samples = 20, radius = 10, simple = True, channel = 1)
     
     #Distance field buffer (transparence)
@@ -75,10 +79,11 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     if self_shading:   
         bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
         bgl_filter_sss(base_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), mask = False)
-
+    """
     #Ajouter le trait
-    bgl_filter_line(base_buffer, line_scale)
+    bgl_filter_line2(base_buffer, depth_buffer, line_scale)
 
+    """
     #Merge Shadow             
     if len(shadow_objs) > 0:
         if self_shading:
@@ -93,7 +98,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
-
+    """
     #Bake    
     if bake_to_uvs:
         bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)           
@@ -120,6 +125,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     sdf_buffer.free()
     erosion_buffer.free()
     base_buffer.free()
+    depth_buffer.free()
 
     #Enregistrement des images
     buffer_to_image( image_name, buffer, dim_x, dim_y)
@@ -304,7 +310,40 @@ def bgl_base_render(offscreen, vertices, indices, colors):
             
             batch.draw(shader)
                             
-            bgl.glDisable(bgl.GL_DEPTH_TEST)  
+            bgl.glDisable(bgl.GL_DEPTH_TEST)
+
+
+def bgl_depth_render(offscreen, vertices, indices, colors):
+
+    camera = bpy.context.scene.camera
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    
+    view_matrix = camera.matrix_world.inverted()
+    projection_matrix = change_camera_matrix(camera, dim_x, dim_y)
+
+    shader =  compile_shader("depth.vert", "depth.frag")
+    batch = batch_for_shader(shader, 'TRIS', {"pos": vertices}, indices=indices)   
+
+    with offscreen.bind():
+        
+        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT)
+        
+        with gpu.matrix.push_pop():
+                           
+            shader.bind()
+            shader.uniform_float("modelMatrix", view_matrix)
+            shader.uniform_float("viewProjectionMatrix", projection_matrix)
+            
+            bgl.glDepthMask(bgl.GL_TRUE)
+            bgl.glClearDepth(1000000);
+            bgl.glClearColor(0.0, 0.0, 0.0, 0.0);
+            bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
+                      
+            bgl.glEnable(bgl.GL_DEPTH_TEST)
+            
+            batch.draw(shader)
+                            
+            bgl.glDisable(bgl.GL_DEPTH_TEST)
 
             
 def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
@@ -458,8 +497,6 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple 
                 batch.draw(shader)
 
     offscreen_B.free()
-          
-
 
 def bgl_filter_line(offscreen_A, line_scale):     
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
@@ -475,6 +512,31 @@ def bgl_filter_line(offscreen_A, line_scale):
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_int("line_scale", line_scale)
+            batch.draw(shader)
+
+    copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
+
+    offscreen_B.free()
+
+
+def bgl_filter_line2(offscreen_A, depth_buffer, line_scale):     
+    offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
+            
+    shader = compile_shader("image2d.vert", "line2.frag")                        
+    batch = batch2d(shader, dim_x, dim_y)
+
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
+    
+    with offscreen_B.bind():                   
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
+            bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, depth_buffer.color_texture)               
+            shader.bind()
+            shader.uniform_int("Sampler", 0)
+            shader.uniform_int("Depth_buffer", 1)
             shader.uniform_int("line_scale", line_scale)
             batch.draw(shader)
 

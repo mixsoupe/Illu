@@ -22,16 +22,17 @@ void main()
     mat3 I;
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
-            vec4 sample  = texelFetch(Sampler, ivec2(gl_FragCoord) + ivec2(i-1,j-1)*line_scale, 0 ).rgba;
+            vec4 sample  = texelFetch(Sampler, ivec2(gl_FragCoord) + ivec2(i-1,j-1)*line_scale*2, 0 ).rgba;
             if (sample.a == 0) {
                 I[i][j] = diffuse.b;
-            } 
-            else {
-            I[i][j] = sample.b;
             }
-            //I[i][j] = sample.b;
-    }
-    
+            else if (sample.b < diffuse.b){
+                I[i][j] = diffuse.b;
+            }
+            else {
+                I[i][j] = sample.b;
+            }
+    }    
 }
 
 float gx = dot(sx[0], I[0]) + dot(sx[1], I[1]) + dot(sx[2], I[2]); 

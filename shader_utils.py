@@ -215,7 +215,127 @@ def build_model(objects, get_uv = False):
     else:
         weights = np.ones(len(mesh.vertices))
 
-    color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, depth, np.ones(len(mesh.vertices)) ]
+    #Calcul des normales
+    camera_vector = camera.matrix_world.to_quaternion() @ Vector((0.0, 0.0, 1.0))
+    normals_to_camera = np.dot(normales, camera_vector)
+
+    color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
+    color_rgba = color_rgba.tolist()
+        
+    #Nettoyage
+    bpy.data.meshes.remove(mesh)
+    
+    if get_uv:
+        return vertices, indices, color_rgba, uvs, uv_indices, loop_indices
+    else:
+        return vertices, indices, color_rgba
+
+def build_model2(objects, get_uv = False):
+    camera = bpy.context.scene.camera
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+
+    #Préparation du mesh 
+    mesh = bpy.data.meshes.new("temp_mesh")
+    bm = bmesh.new()
+
+    for o in objects: #Astuce pour fusionner plusieurs objets
+        bm_temp = bmesh.new()            
+        bm_temp.from_object(object=o, depsgraph=depsgraph, deform=True)
+        bm_temp.transform(o.matrix_world)
+        bm_temp.to_mesh(mesh)
+        bm_temp.free()
+        bm.from_mesh(mesh)
+        obj = o
+
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    bm.to_mesh(mesh)
+    bm.free()
+
+    mesh.calc_loop_triangles()
+    
+    vlen = len(mesh.vertices)
+    tlen = len(mesh.loop_triangles)
+    
+    #Récupération des données
+    indices = np.empty((tlen, 3), 'i')    
+    mesh.loop_triangles.foreach_get(
+        "vertices", np.reshape(indices, tlen * 3))
+
+    vertices = np.empty((vlen, 3), 'f')
+    mesh.vertices.foreach_get(
+        "co", np.reshape(vertices, vlen * 3))
+      
+    normales = np.empty((vlen, 3), 'f')
+    mesh.vertices.foreach_get(
+        "normal", np.reshape(normales, vlen * 3))
+    
+    if get_uv:
+        # uvs = coordonnée de chaque uv point
+        # uv_indices = les index des uv point pour chaque loop
+        # uv_vertices = l'indice du vertex correspondant à l'uv
+
+        #FIX convert to numpy
+        uvs = []
+        uv_indices = []
+        loop_indices = []
+
+        for uv_layer in mesh.uv_layers:
+            if uv_layer.active_render:
+                break
+
+        for face in mesh.polygons:        
+            for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
+                uv_coords = uv_layer.data[loop_idx].uv
+                uvs.append(uv_coords)                
+                loop_indices.append(vert_idx)
+            uv_indices.append(list(face.loop_indices))
+
+          
+        uvs = np.asarray(uvs)
+        uv_indices = np.asarray(uv_indices, dtype = np.int32)
+        loop_indices = np.asarray(loop_indices, dtype = np.int32) 
+
+    camera_loc = camera.location  
+
+    #Calcul et normalisation zdepth    
+    distances = np.linalg.norm(vertices - camera_loc, ord=2, axis=1.)
+    #distances = np.interp(distances, (distances.min(), distances.max()), (0, 1))
+    distances = np.interp(distances, (0, 100), (0, 1))
+    
+    depth = distances.reshape(vlen, 1)
+    
+    #Check et récupération de l'épaisseur
+    thick_eval = False  
+    vgroups = obj.vertex_groups
+
+    for vg in vgroups:
+        if vg.name == "Thickness":
+            thick_eval = True
+            break
+    if thick_eval:
+        weight_list = []
+        for i in range(len(mesh.vertices)):
+            weight_list.append(vg.weight(i))
+        weights = np.asarray(weight_list)
+    else:
+        weights = np.ones(len(mesh.vertices))
+
+    camera_vector = camera.matrix_world.to_quaternion() @ Vector((0.0, 0.0, 1.0))
+    normals_to_camera = np.dot(normales, camera_vector)
+
+    #decompose 32bits
+    depth_A = depth*255
+    depth_B = np.modf(depth_A)[0]*255
+    depth_C = np.modf(depth_B)[0]*255
+
+    
+
+    depth_A /= 255
+    depth_B /= 255
+    depth_C /= 255
+
+    #Compose color
+    color_rgba = np.c_[depth_A, depth_B, depth_C, weights]
     color_rgba = color_rgba.tolist()
         
     #Nettoyage
