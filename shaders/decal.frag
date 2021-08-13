@@ -11,7 +11,7 @@ uniform int inverse;
 
 //32bits converion
 float convert32 (vec3 input) {
-    return (input.x+ (input.y + input.z/255)/255)*255;
+    return (input.x+ (input.y + input.z/255)/255)*100;
 }   
 
 float random (vec2 st) {
