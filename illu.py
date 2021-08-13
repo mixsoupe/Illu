@@ -66,7 +66,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     
     #Distance field buffer (transparence)
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)               
-    bgl_filter_distance_field(sdf_buffer, scale)
+    bgl_filter_distance_field(sdf_buffer, depth_buffer, scale)
     
     bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20, depth_precision = 1)
     bgl_filter_expand(sdf_buffer, dim_x, dim_y, -4)        
@@ -400,7 +400,7 @@ def bgl_filter_decal(offscreen_A, depth_buffer, light, scale, depth_precision, a
     offscreen_B.free()
             
 
-def bgl_filter_distance_field(offscreen_A, scale,  factor = True):    
+def bgl_filter_distance_field(offscreen_A, depth_buffer, scale,  factor = True):    
 
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
     
@@ -420,18 +420,24 @@ def bgl_filter_distance_field(offscreen_A, scale,  factor = True):
     for i in range(iteration):        
         with offscreen_B.bind():
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
+            bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, depth_buffer.color_texture)            
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_int("Depth", 1)
             shader.uniform_float("Beta", beta)
             shader.uniform_float("Offset", offset)
             shader.uniform_int("factor", factor)
             batch.draw(shader)
         with offscreen_A.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)
+            bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, depth_buffer.color_texture)           
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_int("Depth", 1)
             shader.uniform_float("Beta", beta)
             shader.uniform_float("Offset", offset)
             shader.uniform_int("factor", factor)
@@ -441,18 +447,24 @@ def bgl_filter_distance_field(offscreen_A, scale,  factor = True):
     for i in range(iteration):
         with offscreen_B.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
+            bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, depth_buffer.color_texture)           
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_int("Depth", 1)
             shader.uniform_float("Beta", beta)
             shader.uniform_float("Offset", offset)
             shader.uniform_int("factor", factor)
             batch.draw(shader)
         with offscreen_A.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)
+            bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, depth_buffer.color_texture)            
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_int("Depth", 1)
             shader.uniform_float("Beta", beta)
             shader.uniform_float("Offset", offset)
             shader.uniform_int("factor", factor)
