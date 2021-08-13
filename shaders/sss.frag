@@ -4,7 +4,7 @@ uniform sampler2D Sampler;
 uniform sampler2D Depth;
 uniform vec2 step;
 uniform float depth_precision;
-uniform int channel;
+uniform vec3 channel;
 
 //32bits converion
 float convert32 (vec3 input) {
@@ -60,14 +60,12 @@ void main()
         // Accumulate:
         colorBlurred += w[i] * color;
     }
-    
-    if (channel == 0){
-    gl_FragColor = vec4(colorBlurred.x, colorBase.g, colorBase.b, colorBase.a);
-    }
-    if (channel == 1){
-    gl_FragColor = vec4(colorBase.r, colorBlurred.y, colorBase.b, colorBase.a);
-    }
-    if (channel == 2){
-    gl_FragColor = vec4(colorBase.r, colorBase.g, colorBlurred.z, colorBase.a);
-    }
+
+    float colorR = mix(colorBase.r, colorBlurred.r, channel.r);
+    float colorG = mix(colorBase.g, colorBlurred.g, channel.g);
+    float colorB = mix(colorBase.b, colorBlurred.b, channel.b);
+
+    gl_FragColor = vec4(colorR, colorG, colorB, colorBase.a);
+
+
 }

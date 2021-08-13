@@ -62,8 +62,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     if self_shading:
         bgl_filter_expand(base_buffer, dim_x, dim_y, 3)
     
-    #bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, simple = True, channel = 1)
-    bgl_filter_sss(base_buffer, depth_buffer, samples = 60, radius = 10)
+    bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (1,0,0))
 
     """
     #Distance field buffer (transparence)
@@ -455,7 +454,7 @@ def bgl_filter_distance_field(offscreen_A, scale,  factor = True):
     offscreen_B.free()
 
 
-def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_precision = 50, channel = 0):
+def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_precision = 50, channel = (1, 1, 1)):
     """
     Flou en tenant compte de la couche de profondeur
     R = Valeur d'entrée
@@ -463,7 +462,6 @@ def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_p
     B = Z depth
     A = Alpha
     """
-    #channel = (1, 0, 0)
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
       
     shader = compile_shader("image2d.vert", "sss.frag")                        
@@ -485,7 +483,7 @@ def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_p
                 shader.uniform_int("Depth", 1)
                 shader.uniform_float("step", step)
                 shader.uniform_float("depth_precision", depth_precision)
-                shader.uniform_int("channel", channel)
+                shader.uniform_float("channel", channel)
                 batch.draw(shader)
                 step = (0 / dim_x * radius,1 / dim_y * radius)
                 
@@ -500,7 +498,7 @@ def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_p
                 shader.uniform_int("Depth", 1)
                 shader.uniform_float("step", step)
                 shader.uniform_float("depth_precision", depth_precision)
-                shader.uniform_int("channel", channel)
+                shader.uniform_float("channel", channel)
                 batch.draw(shader)
 
     offscreen_B.free()
