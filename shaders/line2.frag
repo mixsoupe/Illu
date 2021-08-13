@@ -38,7 +38,7 @@ void main()
             float sample_depth = convert32(sample.rgb);
             
             if (sample.a == 0.0){
-                I[i][j] = sample_depth;
+                I[i][j] = center_depth;
             }
             else if (sample_depth < center_depth){
                 I[i][j] = center_depth;
@@ -60,7 +60,7 @@ void main()
             float sample_normal = sample.b;
             
             if (sample.a == 0.0){
-                J[i][j] = sample_normal;
+                J[i][j] = center_normal;
             }
             else if (sample_normal < center_normal){
                 J[i][j] = center_normal;
