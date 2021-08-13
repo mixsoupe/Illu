@@ -70,7 +70,6 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     
     bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20, depth_precision = 1)
     bgl_filter_expand(sdf_buffer, dim_x, dim_y, -4)        
-    #merge_buffers(sdf_buffer, base_buffer, "merge_SDF_pre", dim_x, dim_y) Le résultat est mieux sans ça
     bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 1, depth_precision = 1) 
 
     merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
