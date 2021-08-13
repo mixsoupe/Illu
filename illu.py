@@ -44,6 +44,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    line_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
 
     #Creation du modele        
     vertices, indices, colors, uvs, uv_indices, loop_indices = build_model(obj, get_uv = True)
@@ -81,8 +82,8 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
 
     
     #Ajouter le trait
-    bgl_filter_line(base_buffer, depth_buffer, line_scale)
-    #bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (0,0,1)) 
+    bgl_filter_line(base_buffer, depth_buffer, line_scale, False)
+    #bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (0,0,1))
 
     
     #Merge Shadow             
@@ -127,6 +128,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     erosion_buffer.free()
     base_buffer.free()
     depth_buffer.free()
+    line_buffer.free()
 
     #Enregistrement des images
     buffer_to_image( image_name, buffer, dim_x, dim_y)
@@ -522,7 +524,7 @@ def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_p
     offscreen_B.free()
 
 
-def bgl_filter_line(offscreen_A, depth_buffer, line_scale):     
+def bgl_filter_line(offscreen_A, depth_buffer, line_scale, border):     
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "line.frag")                        
@@ -539,6 +541,7 @@ def bgl_filter_line(offscreen_A, depth_buffer, line_scale):
             shader.bind()
             shader.uniform_int("Sampler", 0)
             shader.uniform_int("Depth_buffer", 1)
+            shader.uniform_int("border", border)
             shader.uniform_int("line_scale", line_scale)
             batch.draw(shader)
 

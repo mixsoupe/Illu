@@ -2,7 +2,8 @@ in vec2 vTexCoord;
         
 uniform sampler2D Sampler;
 uniform sampler2D Depth_buffer;
-uniform int line_scale;          
+uniform int line_scale;
+uniform int border;         
 
 mat3 sx = mat3( 
     1.0, 2.0, 1.0, 
@@ -38,7 +39,12 @@ void main()
             float sample_depth = convert32(sample.rgb);
             
             if (sample.a == 0.0){
-                I[i][j] = center_depth;
+                if (border == 0){
+                    I[i][j] = center_depth;
+                }
+                else {
+                    I[i][j] = sample_depth;
+                }
             }
             else if (sample_depth < center_depth){
                 I[i][j] = center_depth;
