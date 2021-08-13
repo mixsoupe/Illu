@@ -219,7 +219,10 @@ def build_model(objects, get_uv = False):
     camera_vector = camera.matrix_world.to_quaternion() @ Vector((0.0, 0.0, 1.0))
     normals_to_camera = np.dot(normales, camera_vector)
 
-    color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
+    #final color
+    #color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
+    np.random.seed(2021)
+    color_rgba = np.c_[np.random.rand(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
     color_rgba = color_rgba.tolist()
         
     #Nettoyage

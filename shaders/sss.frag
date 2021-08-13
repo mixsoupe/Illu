@@ -1,15 +1,21 @@
 in vec2 vTexCoord;
 
 uniform sampler2D Sampler;
+uniform sampler2D Depth;
 uniform vec2 step;
 uniform int mask;
 uniform int simple;
 uniform int channel;
 
+//32bits converion
+float convert32 (vec3 input) {
+    return (input.x+ (input.y + input.z/255)/255)*255;
+}   
+
 //generate noise
 float random (vec2 st) {
         return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-    }     
+}     
         
 // Gaussian weights for the six samples around the current pixel    
 float w[6] = float[]( 0.006,   0.061,   0.242,  0.242,  0.061, 0.006 );
@@ -25,9 +31,9 @@ void main()
     // Fetch color and linear depth for current pixel
     vec4 colorBase = texture(Sampler, vTexCoord).rgba;    
     vec2 colorM = texture(Sampler, vTexCoord).rg;
-    float depthM = texture(Sampler, vTexCoord).b + texture(Sampler, vTexCoord).a;
+    //float depthM = texture(Sampler, vTexCoord).b + texture(Sampler, vTexCoord).a;
+    float depthM = convert32(texture(Depth, vTexCoord).rgb); //+ texture(Sampler, vTexCoord).a;
 
-    //float depthM = (gl_FragCoord.z / gl_FragCoord.w);
     
     // Accumulate center sample, multiplying it with its gaussian weight
     vec2 colorBlurred = colorM;
@@ -46,10 +52,12 @@ void main()
         // Fetch color and depth for current sample:
         vec2 offset = vTexCoord + o[i] * finalStep;
         vec2 color = texture(Sampler, offset).rg;
-        float depth = texture(Sampler, offset).b + texture(Sampler, offset).a;
+        //float depth = texture(Sampler, offset).b + texture(Sampler, offset).a;
+        float depth = convert32(texture(Depth, offset).rgb);
+
         float intensity = texture(Sampler, offset).g;
         
-        float correction = 12;
+        float correction = 50;
 
         if (mask == 1){
             //Sur le contour, le flou ne tient pas compte de la profondeur

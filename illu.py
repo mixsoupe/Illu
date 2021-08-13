@@ -58,12 +58,14 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     bgl_base_render(base_buffer, vertices, indices, colors)
     bgl_depth_render(depth_buffer, vertices, indices, colors)
     
-    """
+    
     if self_shading:
         bgl_filter_expand(base_buffer, dim_x, dim_y, 3)
     
-    bgl_filter_sss(base_buffer, samples = 20, radius = 10, simple = True, channel = 1)
-    
+    #bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, simple = True, channel = 1)
+    bgl_filter_sss(base_buffer, depth_buffer, samples = 60, radius = 10)
+
+    """
     #Distance field buffer (transparence)
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)               
     bgl_filter_distance_field(sdf_buffer, scale)
@@ -453,7 +455,7 @@ def bgl_filter_distance_field(offscreen_A, scale,  factor = True):
     offscreen_B.free()
 
 
-def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple = False, channel = 0):
+def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, mask = False, simple = False, channel = 0):
     """
     Flou en tenant compte de la couche de profondeur
     R = Valeur d'entrée
@@ -474,9 +476,12 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple 
         step = (0 , 1 / dim_y * radius)
         with offscreen_B.bind():                   
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-                bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+                bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
+                bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+                bgl.glBindTexture(bgl.GL_TEXTURE_2D, depth_buffer.color_texture)            
                 shader.bind()                
                 shader.uniform_int("Sampler", 0)
+                shader.uniform_int("Depth", 1)
                 shader.uniform_float("step", step)
                 shader.uniform_int("mask", mask)
                 shader.uniform_int("simple", simple)
@@ -487,9 +492,12 @@ def bgl_filter_sss(offscreen_A, samples = 60, radius = 20, mask = False, simple 
         step = (1 / dim_x * radius , 0)        
         with offscreen_A.bind():                   
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-                bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
+                bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)
+                bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+                bgl.glBindTexture(bgl.GL_TEXTURE_2D, depth_buffer.color_texture)             
                 shader.bind()
                 shader.uniform_int("Sampler", 0)
+                shader.uniform_int("Depth", 1)
                 shader.uniform_float("step", step)
                 shader.uniform_int("mask", mask)
                 shader.uniform_int("simple", simple)
