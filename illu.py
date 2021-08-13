@@ -79,19 +79,20 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     #Decal (shading)
     if self_shading:   
         bgl_filter_decal(base_buffer, depth_buffer, light, scale, depth_precision, angle)
-        #bgl_filter_sss(base_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), mask = False)
+        bgl_filter_sss(base_buffer, depth_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), channel = (1,0,0))
     
     #Ajouter le trait
-    #bgl_filter_line(base_buffer, depth_buffer, line_scale)
+    bgl_filter_line(base_buffer, depth_buffer, line_scale)
+    #bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (0,0,1)) 
 
-    """
+    
     #Merge Shadow             
     if len(shadow_objs) > 0:
         if self_shading:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow", dim_x, dim_y)
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
-        
+       
     #Noise        
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
     bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)  
@@ -99,7 +100,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
-    """
+    
     #Bake    
     if bake_to_uvs:
         bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)           
@@ -366,9 +367,11 @@ def bgl_filter_decal(offscreen_A, depth_buffer, light, scale, depth_precision, a
     with offscreen_B.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
-                       
+            bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, depth_buffer.color_texture)          
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_int("Depth", 1)
             shader.uniform_float("scale", scale)
             shader.uniform_float("depth_precision", depth_precision)
             shader.uniform_float("angle", rad)
@@ -380,9 +383,12 @@ def bgl_filter_decal(offscreen_A, depth_buffer, light, scale, depth_precision, a
     rad = math.radians(light_angle + 180)
     with offscreen_A.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)
+            bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, depth_buffer.color_texture)              
             shader.bind()
             shader.uniform_int("Sampler", 0)
+            shader.uniform_int("Depth", 1)
             shader.uniform_float("scale", scale)
             shader.uniform_float("depth_precision", depth_precision)
             shader.uniform_float("angle", rad)

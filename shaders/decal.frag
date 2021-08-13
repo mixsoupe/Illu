@@ -1,12 +1,18 @@
 in vec2 vTexCoord;
 
 uniform sampler2D Sampler;
+uniform sampler2D Depth;
 uniform float scale;
 uniform float depth_precision;
 uniform float angle;
 uniform float dim_x;
 uniform float dim_y;
 uniform int inverse;
+
+//32bits converion
+float convert32 (vec3 input) {
+    return (input.x+ (input.y + input.z/255)/255)*255;
+}   
 
 float random (vec2 st) {
         return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
@@ -31,8 +37,9 @@ void main()
         
         float sample_a = texture(Sampler, vTexCoord + direction * scale * i).a;
 
-        float current_z = texture(Sampler, vTexCoord).b;
-        float sample_z = texture(Sampler, vTexCoord + direction * scale * i).b;
+        float current_z = convert32(texture(Depth, vTexCoord).rgb);
+
+        float sample_z = convert32(texture(Depth, vTexCoord + direction * scale * i).rgb);
         
         float delta_z = sample_z - current_z;
 
