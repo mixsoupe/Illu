@@ -49,7 +49,7 @@ void main()
             end = 1;              
         }
         //normaliser en fonction de la distance de la caméra
-        if (delta_z > depth_precision/2 &&  end == 0) {
+        if (delta_z > depth_precision &&  end == 0) {
             value = 1.0 - (float(i)/iteration);
             end = 1;              
         }
