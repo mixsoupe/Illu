@@ -60,8 +60,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     
     
     if self_shading:
-        bgl_filter_expand(base_buffer, dim_x, dim_y, 3)
-    
+        bgl_filter_expand(base_buffer, dim_x, dim_y, 3)    
     bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (1,0,0))
 
     
@@ -79,7 +78,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     #Decal (shading)
     if self_shading:   
         bgl_filter_decal(base_buffer, depth_buffer, light, scale, depth_precision, angle)
-        bgl_filter_sss(base_buffer, depth_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), channel = (1,0,0))
+        #bgl_filter_sss(base_buffer, depth_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), channel = (1,0,0))
     
     #Ajouter le trait
     bgl_filter_line(base_buffer, depth_buffer, line_scale)

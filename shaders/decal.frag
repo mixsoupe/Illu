@@ -34,12 +34,13 @@ void main()
         float rand_angle = angle + (rand*1.0);
                 
         vec2 direction = vec2(cos(rand_angle)/dim_x, sin(rand_angle)/dim_y);
-        
-        float sample_a = texture(Sampler, vTexCoord + direction * scale * i).a;
-
         float current_z = convert32(texture(Depth, vTexCoord).rgb);
+        
+        
+        float distance = scale * max((1-current_z/10), 0.1);
 
-        float sample_z = convert32(texture(Depth, vTexCoord + direction * scale * i).rgb);
+        float sample_a = texture(Sampler, vTexCoord + direction * distance * i).a;
+        float sample_z = convert32(texture(Depth, vTexCoord + direction * distance * i).rgb);
         
         float delta_z = sample_z - current_z;
 
@@ -54,8 +55,7 @@ void main()
         }
 
     }   
-    //value = abs(inverse - value);
-    //value += inverse/100000;
+    
     if (inverse == 1) {
         value = colorBase.r * (value + 1)/2;
     }
