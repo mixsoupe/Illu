@@ -64,25 +64,25 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     
     bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (1,0,0))
 
-    """
+    
     #Distance field buffer (transparence)
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)               
     bgl_filter_distance_field(sdf_buffer, scale)
     
-    bgl_filter_sss(sdf_buffer, samples = 20, radius = 10, simple = True)
+    bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20, depth_precision = 1)
     bgl_filter_expand(sdf_buffer, dim_x, dim_y, -4)        
-    merge_buffers(sdf_buffer, base_buffer, "merge_SDF_pre", dim_x, dim_y)
-    bgl_filter_sss(sdf_buffer, samples = 20, radius = 2, simple = True) 
+    #merge_buffers(sdf_buffer, base_buffer, "merge_SDF_pre", dim_x, dim_y) Le résultat est mieux sans ça
+    bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 1, depth_precision = 1) 
 
     merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
     
     #Decal (shading)
     if self_shading:   
-        bgl_filter_decal(base_buffer, light, scale, depth_precision, angle)
-        bgl_filter_sss(base_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), mask = False)
-    """
+        bgl_filter_decal(base_buffer, depth_buffer, light, scale, depth_precision, angle)
+        #bgl_filter_sss(base_buffer, samples = max(20, 30*int(scale)), radius = max(8, 10*int(scale)), mask = False)
+    
     #Ajouter le trait
-    bgl_filter_line(base_buffer, depth_buffer, line_scale)
+    #bgl_filter_line(base_buffer, depth_buffer, line_scale)
 
     """
     #Merge Shadow             
@@ -347,7 +347,7 @@ def bgl_depth_render(offscreen, vertices, indices, colors):
             bgl.glDisable(bgl.GL_DEPTH_TEST)
 
             
-def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
+def bgl_filter_decal(offscreen_A, depth_buffer, light, scale, depth_precision, angle):
     camera = bpy.context.scene.camera
     if light is not None:
         light_angle = get_light_angle(light, camera) - angle
@@ -365,7 +365,8 @@ def bgl_filter_decal(offscreen_A, light, scale, depth_precision, angle):
     rad = math.radians(light_angle)
     with offscreen_B.bind():                   
             bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
+                       
             shader.bind()
             shader.uniform_int("Sampler", 0)
             shader.uniform_float("scale", scale)
