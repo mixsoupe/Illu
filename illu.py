@@ -45,10 +45,10 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     line_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-
+    
     #Creation du modele        
     vertices, indices, colors, uvs, uv_indices, loop_indices = build_model(obj, get_uv = True)
-    
+        
     #Shadow Buffer
     shadow_objs = get_shadow_objects(exclude = obj)
     if len(shadow_objs) > 0:
@@ -58,12 +58,10 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     #Base render
     bgl_base_render(base_buffer, vertices, indices, colors)
     bgl_depth_render(depth_buffer, vertices, indices, colors)
-    
-    
+        
     if self_shading:
         bgl_filter_expand(base_buffer, dim_x, dim_y, 3)    
     bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (1,0,0))
-
     
     #Distance field buffer (transparence)
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)               
@@ -79,13 +77,11 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     if self_shading:   
         bgl_filter_decal(base_buffer, depth_buffer, light, scale, depth_precision, angle)
         bgl_filter_sss(base_buffer, depth_buffer, samples = 60, radius = 20, channel = (1,0,0))
-
     
     #Ajouter le trait
     bgl_filter_line(base_buffer, depth_buffer, 2, False)
     bgl_filter_sss(base_buffer, depth_buffer, samples = 10, radius = line_scale, channel = (0,0,1))
     bgl_filter_custom(base_buffer, "line_filter", line_scale)
-
     
     #Merge Shadow             
     if len(shadow_objs) > 0:
@@ -94,8 +90,7 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
        
-    #Noise
-         
+    #Noise         
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
     bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)  
     if self_shading:   
@@ -134,7 +129,10 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
 
     #Enregistrement des images
     buffer_to_image( image_name, buffer, dim_x, dim_y)
+
+    #print ((time.time()-T)*1000)
     
+
 def bgl_shadow(shadow_buffer, vertices, indices, colors,
     vertices_shadow, indices_shadow, light, shadow_size, soft_shadow):
 
