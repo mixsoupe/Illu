@@ -24,7 +24,7 @@ from mathutils import Matrix, Vector, Euler
 from . shader_utils import *
 
 #FIX Prévoir un overscan
-def generate_images(obj, image_name, light, scale, depth_precision, angle, texture_size, shadow_size, soft_shadow, self_shading, bake_to_uvs, line_scale, noise_scale, noise_diffusion):
+def generate_images(obj, image_name, light, scale, smoothness, angle, texture_size, shadow_size, soft_shadow, self_shading, bake_to_uvs, line_scale, line_detection, noise_scale, noise_diffusion):
     T = time.time()
     global dim_x
     global dim_y
@@ -77,11 +77,11 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
     
     #Decal (shading)
     if self_shading:   
-        bgl_filter_decal(base_buffer, depth_buffer, light, scale, depth_precision, angle)
+        bgl_filter_decal(base_buffer, depth_buffer, light, scale, smoothness/5, angle)
         bgl_filter_sss(base_buffer, depth_buffer, samples = 60, radius = 20, channel = (1,0,0))
     
     #Ajouter le trait
-    bgl_filter_line(base_buffer, depth_buffer, 2, False)
+    bgl_filter_line(base_buffer, depth_buffer, line_detection, False)
     bgl_filter_sss(base_buffer, depth_buffer, samples = 10, radius = line_scale, channel = (0,0,1))
     bgl_filter_custom(base_buffer, "line_filter", line_scale)
     
@@ -353,7 +353,7 @@ def bgl_depth_render(offscreen, vertices, indices, colors):
             bgl.glDisable(bgl.GL_DEPTH_TEST)
 
             
-def bgl_filter_decal(offscreen_A, depth_buffer, light, scale, depth_precision, angle):
+def bgl_filter_decal(offscreen_A, depth_buffer, light, scale, smoothness, angle):
     camera = bpy.context.scene.camera
     if light is not None:
         light_angle = get_light_angle(light, camera) - angle
@@ -378,7 +378,7 @@ def bgl_filter_decal(offscreen_A, depth_buffer, light, scale, depth_precision, a
             shader.uniform_int("Sampler", 0)
             shader.uniform_int("Depth", 1)
             shader.uniform_float("scale", scale)
-            shader.uniform_float("depth_precision", depth_precision)
+            shader.uniform_float("smoothness", smoothness)
             shader.uniform_float("angle", rad)
             shader.uniform_float("dim_x", dim_x)
             shader.uniform_float("dim_y", dim_y)
@@ -395,7 +395,7 @@ def bgl_filter_decal(offscreen_A, depth_buffer, light, scale, depth_precision, a
             shader.uniform_int("Sampler", 0)
             shader.uniform_int("Depth", 1)
             shader.uniform_float("scale", scale)
-            shader.uniform_float("depth_precision", depth_precision)
+            shader.uniform_float("smoothness", smoothness)
             shader.uniform_float("angle", rad)
             shader.uniform_float("dim_x", dim_x)
             shader.uniform_float("dim_y", dim_y)
@@ -528,7 +528,7 @@ def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_p
     offscreen_B.free()
 
 
-def bgl_filter_line(offscreen_A, depth_buffer, line_scale, border):     
+def bgl_filter_line(offscreen_A, depth_buffer, line_detection, border):     
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "line.frag")                        
@@ -546,7 +546,7 @@ def bgl_filter_line(offscreen_A, depth_buffer, line_scale, border):
             shader.uniform_int("Sampler", 0)
             shader.uniform_int("Depth_buffer", 1)
             shader.uniform_int("border", border)
-            shader.uniform_int("line_scale", line_scale)
+            shader.uniform_float("line_detection", line_detection)
             batch.draw(shader)
 
     copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
@@ -692,8 +692,6 @@ def bgl_filter_custom(offscreen_A, filter, value):
             shader.bind()
             shader.uniform_int("Sampler", 0)
             shader.uniform_int("value", value)
-            #shader.uniform_float("amplitude", amplitude)
-            #shader.uniform_float("u_resolution", (dim_x, dim_y))
             batch.draw(shader)
     
     copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)

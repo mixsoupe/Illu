@@ -3,7 +3,7 @@ in vec2 vTexCoord;
 uniform sampler2D Sampler;
 uniform sampler2D Depth;
 uniform float scale;
-uniform float depth_precision;
+uniform float smoothness;
 uniform float angle;
 uniform float dim_x;
 uniform float dim_y;
@@ -49,7 +49,7 @@ void main()
             end = 1;              
         }
         //normaliser en fonction de la distance de la caméra
-        if (delta_z > depth_precision &&  end == 0) {
+        if (delta_z > smoothness &&  end == 0) {
             value = 1.0 - (float(i)/iteration);
             end = 1;              
         }

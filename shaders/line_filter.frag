@@ -6,8 +6,8 @@ void main()
 {
     vec4 color = texture(Sampler, vTexCoord).rgba;
     float b = color.b;
-    if (b >0.1){
-        b *=value*1.5;
+    if (b >0){
+        b *=value*value;
     }
     else {
         b = 0;

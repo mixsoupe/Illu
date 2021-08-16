@@ -2,7 +2,7 @@ in vec2 vTexCoord;
         
 uniform sampler2D Sampler;
 uniform sampler2D Depth_buffer;
-uniform int line_scale;
+uniform float line_detection;
 uniform int border;         
 
 mat3 sx = mat3( 
@@ -35,7 +35,7 @@ void main()
     mat3 I;
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
-            vec4 sample  = texelFetch(Depth_buffer, ivec2(gl_FragCoord) + ivec2(i-1,j-1)*line_scale*1, 0 ).rgba;          
+            vec4 sample  = texelFetch(Depth_buffer, ivec2(gl_FragCoord) + ivec2(i-1,j-1), 0 ).rgba;          
             float sample_depth = convert32(sample.rgb);
             
             if (sample.a == 0.0){
@@ -62,7 +62,7 @@ void main()
     mat3 J;
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
-            vec4 sample  = texelFetch(Sampler, ivec2(gl_FragCoord) + ivec2(i-1,j-1)*line_scale*1, 0 ).rgba;          
+            vec4 sample  = texelFetch(Sampler, ivec2(gl_FragCoord) + ivec2(i-1,j-1), 0 ).rgba;          
             float sample_normal = sample.b;
             
             if (sample.a == 0.0){
@@ -85,8 +85,8 @@ void main()
     //g = smoothstep(0.2, 0.3, g*2000); // DEFAULT 0.1, 0.4
     n = smoothstep(0.0, 1.0, n); // DEFAULT 0.1, 0.4
 
-    d *= 1000 * max((1-center_depth*30), 0.05);
-    d *= n*10;
+    d *= max((1-center_depth*30), 0.05) * line_detection * 1000;
+    d *= n * line_detection *10;
     
 
     gl_FragColor = vec4(base_center.r, base_center.g, d, alpha);
