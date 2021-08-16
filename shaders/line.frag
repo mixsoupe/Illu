@@ -85,8 +85,8 @@ void main()
     //g = smoothstep(0.2, 0.3, g*2000); // DEFAULT 0.1, 0.4
     n = smoothstep(0.0, 1.0, n); // DEFAULT 0.1, 0.4
 
-    d *= 1000 * max((1-center_depth*30), 0.05);
-    d *= n*10;
+    d *= 500 * max((1-center_depth*30), 0.05);
+    d *= n*5;
     
 
     gl_FragColor = vec4(base_center.r, base_center.g, d, alpha);

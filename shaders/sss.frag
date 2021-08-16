@@ -32,6 +32,7 @@ void main()
     vec3 colorM = texture(Sampler, vTexCoord).rgb;
     float depthM = convert32(texture(Depth, vTexCoord).rgb); //+ texture(Sampler, vTexCoord).a;
 
+    float corrected_precision = max(depth_precision*(1-depthM/10), 1);
     
     // Accumulate center sample, multiplying it with its gaussian weight
     vec3 colorBlurred = colorM;
@@ -53,7 +54,7 @@ void main()
         float depth = convert32(texture(Depth, offset).rgb);
         
         // If the difference in depth is huge, we lerp color back to "colorM":
-        float s = min(depth_precision * abs(depthM - depth), 1.0);        
+        float s = min(corrected_precision * abs(depthM - depth), 1.0);        
 
         color = mix(color, colorM, s);
 

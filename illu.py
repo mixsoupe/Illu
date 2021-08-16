@@ -82,8 +82,9 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
 
     
     #Ajouter le trait
-    bgl_filter_line(base_buffer, depth_buffer, line_scale, False)
-    #bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (0,0,1))
+    bgl_filter_line(base_buffer, depth_buffer, 2, False)
+    bgl_filter_sss(base_buffer, depth_buffer, samples = 10, radius = line_scale, channel = (0,0,1))
+    bgl_filter_custom(base_buffer, "line_filter", line_scale)
 
     
     #Merge Shadow             
@@ -93,14 +94,15 @@ def generate_images(obj, image_name, light, scale, depth_precision, angle, textu
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
        
-    #Noise        
+    #Noise
+         
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
     bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)  
     if self_shading:   
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
-    
+      
     #Bake    
     if bake_to_uvs:
         bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)           
@@ -714,4 +716,29 @@ def valid_check(offscreen_A):
         return True
     else:
         return False
+
+
+def bgl_filter_custom(offscreen_A, filter, value):    
+
+    offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
+    
+    shader = compile_shader("image2d.vert", "{}.frag".format(filter))                    
+    batch = batch2d(shader, dim_x, dim_y)
+
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))        
+      
+    with offscreen_B.bind():
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
+            shader.bind()
+            shader.uniform_int("Sampler", 0)
+            shader.uniform_int("value", value)
+            #shader.uniform_float("amplitude", amplitude)
+            #shader.uniform_float("u_resolution", (dim_x, dim_y))
+            batch.draw(shader)
+    
+    copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
+
+    offscreen_B.free()
 
