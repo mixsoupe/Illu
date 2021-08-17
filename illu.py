@@ -23,7 +23,6 @@ from mathutils import Matrix, Vector, Euler
 
 from . shader_utils import *
 
-#FIX Prévoir un overscan
 def generate_images(obj, image_name, light, scale, smoothness, angle, texture_size, shadow_size, soft_shadow, self_shading, bake_to_uvs, line_scale, line_detection, noise_scale, noise_diffusion):
     T = time.time()
     global dim_x
