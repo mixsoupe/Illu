@@ -444,8 +444,13 @@ class NodeHelper():
                 else:   
                     self.value_set(socketInterface, attr, outputitem[1][attr])
 
-def get_socket_value(this_node, input):
-    socket = this_node.inputs[input]
+def get_socket_value(this_node, input, default = 1):
+    try:
+        socket = this_node.inputs[input]
+    except:
+        object = this_node.objects.name
+        print ("Il faudrait mettre à jour le node 2D Shade de l'objet {}".format(object))
+        return default
     links = socket.links
     if not links:
         return socket.default_value
