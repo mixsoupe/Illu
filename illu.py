@@ -77,7 +77,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     #Decal (shading)
     if self_shading:   
         bgl_filter_decal(base_buffer, depth_buffer, light, scale, smoothness/5, angle)
-        bgl_filter_sss(base_buffer, depth_buffer, samples = 60, radius = 20, channel = (1,0,0))
+        bgl_filter_sss(base_buffer, depth_buffer, samples = int(60*scale), radius = 20*scale, channel = (1,0,0))
     
     #Ajouter le trait
     bgl_filter_line(base_buffer, depth_buffer, line_detection, False)
