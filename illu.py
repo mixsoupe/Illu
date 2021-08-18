@@ -68,7 +68,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
         
     bgl_filter_distance_field(sdf_buffer, depth_buffer, scale)
     
-    bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20, depth_precision = 1)
+    bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20)
     #bgl_filter_expand(sdf_buffer, dim_x, dim_y, int(-4*scale))        
     #bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 1, depth_precision = 1) 
     
