@@ -60,7 +60,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     
     if self_shading:
         bgl_filter_expand(base_buffer, dim_x, dim_y, 3)    
-    bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (1,0,0))
+    bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (1,0,0,0))
     
     #Distance field buffer (transparence)
     
@@ -77,11 +77,11 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     #Decal (shading)
     if self_shading:   
         bgl_filter_decal(base_buffer, depth_buffer, light, scale, smoothness/5, angle)
-        bgl_filter_sss(base_buffer, depth_buffer, samples = int(60*scale), radius = 20*scale, channel = (1,0,0))
+        bgl_filter_sss(base_buffer, depth_buffer, samples = int(60*scale), radius = 20*scale, channel = (1,0,0,0))
     
     #Ajouter le trait
     bgl_filter_line(base_buffer, depth_buffer, line_detection, False)
-    bgl_filter_sss(base_buffer, depth_buffer, samples = 10, radius = line_scale, channel = (0,0,1))
+    bgl_filter_sss(base_buffer, depth_buffer, samples = 10, radius = line_scale, channel = (0,0,1,0))
     bgl_filter_custom(base_buffer, "line_filter", line_scale)
     
     #Merge Shadow             
@@ -476,7 +476,7 @@ def bgl_filter_distance_field(offscreen_A, depth_buffer, scale,  factor = True):
     offscreen_B.free()
 
 
-def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_precision = 50, channel = (1, 1, 1)):
+def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_precision = 50, channel = (1, 1, 1, 0)):
     """
     Flou en tenant compte de la couche de profondeur
     R = Valeur d'entrée

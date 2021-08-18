@@ -4,7 +4,7 @@ uniform sampler2D Sampler;
 uniform sampler2D Depth;
 uniform vec2 step;
 uniform float depth_precision;
-uniform vec3 channel;
+uniform vec4 channel;
 
 //32bits converion
 float convert32 (vec3 input) {
@@ -29,13 +29,12 @@ void main()
     
     // Fetch color and linear depth for current pixel
     vec4 colorBase = texture(Sampler, vTexCoord).rgba;    
-    vec3 colorM = texture(Sampler, vTexCoord).rgb;
     float depthM = convert32(texture(Depth, vTexCoord).rgb); //+ texture(Sampler, vTexCoord).a;
 
     float corrected_precision = max(depth_precision*(1-depthM/10), 1);
     
     // Accumulate center sample, multiplying it with its gaussian weight
-    vec3 colorBlurred = colorM;
+    vec4 colorBlurred = colorBase;
     colorBlurred *= 0.382;
     
     // Calculate the step that we will use to fetch the surrounding pixels,
@@ -50,13 +49,13 @@ void main()
     for (int i = 0; i < 6; i++) {
         // Fetch color and depth for current sample:
         vec2 offset = vTexCoord + o[i] * finalStep;
-        vec3 color = texture(Sampler, offset).rgb;
+        vec4 color = texture(Sampler, offset).rgba;
         float depth = convert32(texture(Depth, offset).rgb);
         
         // If the difference in depth is huge, we lerp color back to "colorM":
         float s = min(corrected_precision * abs(depthM - depth), 1.0);        
 
-        color = mix(color, colorM, s);
+        color = mix(color, colorBase, s);
 
         // Accumulate:
         colorBlurred += w[i] * color;
@@ -65,8 +64,9 @@ void main()
     float colorR = mix(colorBase.r, colorBlurred.r, channel.r);
     float colorG = mix(colorBase.g, colorBlurred.g, channel.g);
     float colorB = mix(colorBase.b, colorBlurred.b, channel.b);
+    float colorA = mix(colorBase.a, colorBlurred.a, channel.a);
 
-    gl_FragColor = vec4(colorR, colorG, colorB, colorBase.a);
+    gl_FragColor = vec4(colorR, colorG, colorB, colorA);
 
 
 }
