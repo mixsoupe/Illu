@@ -69,8 +69,8 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     bgl_filter_distance_field(sdf_buffer, depth_buffer, scale)
     
     bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20, depth_precision = 1)
-    bgl_filter_expand(sdf_buffer, dim_x, dim_y, -4)        
-    bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 1, depth_precision = 1) 
+    #bgl_filter_expand(sdf_buffer, dim_x, dim_y, int(-4*scale))        
+    #bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 1, depth_precision = 1) 
     
     merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
     
@@ -91,10 +91,9 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
     
-    #Noise
-            
+    #Noise            
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
-    bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/100)
+    bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/200)
     
     if self_shading:   
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
