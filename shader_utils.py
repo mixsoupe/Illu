@@ -165,6 +165,38 @@ def build_model(objects, get_uv = False):
     mesh.vertices.foreach_get(
         "normal", np.reshape(normales, vlen * 3))
     
+
+
+
+
+    #Orco coordinates
+    bm = bmesh.new()
+    mesh_orco = bpy.data.meshes.new("temp_mesh_orco")
+    for o in objects: #Astuce pour fusionner plusieurs objets
+        bm_temp = bmesh.new()            
+        bm_temp.from_object(object=o, depsgraph=depsgraph, deform=False)
+        bm_temp.to_mesh(mesh_orco)
+        bm_temp.free()
+        bm.from_mesh(mesh_orco)
+        obj = o
+
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    bm.to_mesh(mesh)
+    bm.free()
+
+    mesh_orco.calc_loop_triangles()
+        
+    #Récupération des données
+    orco = np.empty((vlen, 3), 'f')
+    mesh_orco.vertices.foreach_get(
+        "co", np.reshape(orco, vlen * 3))
+
+
+
+
+
+
+
     if get_uv:
         # uvs = coordonnée de chaque uv point
         # uv_indices = les index des uv point pour chaque loop
@@ -225,10 +257,7 @@ def build_model(objects, get_uv = False):
         
     #Nettoyage
     bpy.data.meshes.remove(mesh)
-    
-    #Orco coordinates
-    orco = vertices
-    
+        
     if get_uv:
         return vertices, indices, color_rgba, uvs, uv_indices, loop_indices, orco
     else:
