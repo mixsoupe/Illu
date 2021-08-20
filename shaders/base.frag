@@ -76,8 +76,9 @@ float snoise(vec3 v){
                                 dot(p2,x2), dot(p3,x3) ) );
 }
 
+
 void main()        
 {
-    float noise = snoise(orco*20);
+    float noise = snoise(orco*50);
     gl_FragColor = vec4(noise, finalColor.g, finalColor.b, finalColor.a);
 }
