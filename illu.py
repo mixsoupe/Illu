@@ -44,6 +44,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     line_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    noise_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     
     #Creation du modele        
     vertices, indices, colors, uvs, uv_indices, loop_indices, orco = build_model(obj, get_uv = True)
@@ -56,8 +57,11 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     
     #Base render
     bgl_base_render(base_buffer, vertices, indices, colors, orco)
+    copy_buffer(base_buffer, noise_buffer, dim_x, dim_y)
+    bgl_filter_custom(base_buffer, "white", 1)
     bgl_depth_render(depth_buffer, vertices, indices, colors)
-    """
+    
+
     if self_shading:
         bgl_filter_expand(base_buffer, dim_x, dim_y, 3)    
     bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (1,0,0,0))
@@ -99,7 +103,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
-    """
+    
     #Noise2
     #bgl_filter_noise2(base_buffer)
     #bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 3, depth_precision = 1, channel = (1,0,0,0))
@@ -132,6 +136,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     base_buffer.free()
     depth_buffer.free()
     line_buffer.free()
+    noise_buffer.free()
 
     #Enregistrement des images
     buffer_to_image( image_name, buffer, dim_x, dim_y)

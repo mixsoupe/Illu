@@ -219,21 +219,16 @@ def build_model(objects, get_uv = False):
     camera_vector = camera.matrix_world.to_quaternion() @ Vector((0.0, 0.0, 1.0))
     normals_to_camera = np.dot(normales, camera_vector)
 
-    #final color
-    np.random.seed(1984)
-    random1 = np.random.rand(len(mesh.vertices))
-    np.random.seed(2021)
-    random2 = np.random.rand(len(mesh.vertices))
-
-    color_rgba = np.c_[random1, random2, normals_to_camera, np.ones(len(mesh.vertices)) ]
-    
-    #color_rgba = np.c_[np.random.rand(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
+    #final color  
+    color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
     color_rgba = color_rgba.tolist()
         
     #Nettoyage
     bpy.data.meshes.remove(mesh)
     
+    #Orco coordinates
     orco = vertices
+    
     if get_uv:
         return vertices, indices, color_rgba, uvs, uv_indices, loop_indices, orco
     else:
