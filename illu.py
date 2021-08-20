@@ -57,7 +57,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     
     #Base render
     bgl_base_render(base_buffer, vertices, indices, colors)
-    bgl_base_noise(noise_buffer, vertices, indices, colors, orco)
+    bgl_base_noise(noise_buffer, vertices, indices, colors, orco, noise_scale/8)
     bgl_depth_render(depth_buffer, vertices, indices, colors)    
 
     if self_shading:
@@ -95,7 +95,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     
     #Noise            
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
-    bgl_filter_noise(erosion_buffer, noise_buffer, noise_scale, noise_diffusion/200)
+    bgl_filter_noise(erosion_buffer, noise_buffer, noise_diffusion/30)
     
     if self_shading:   
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
@@ -320,7 +320,7 @@ def bgl_base_render(offscreen, vertices, indices, colors):
                             
             bgl.glDisable(bgl.GL_DEPTH_TEST)
 
-def bgl_base_noise(offscreen, vertices, indices, colors, orco):
+def bgl_base_noise(offscreen, vertices, indices, colors, orco, scale):
 
     camera = bpy.context.scene.camera
     depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -347,6 +347,8 @@ def bgl_base_noise(offscreen, vertices, indices, colors, orco):
             bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
                       
             bgl.glEnable(bgl.GL_DEPTH_TEST)
+
+            shader.uniform_float("scale", scale)
             
             batch.draw(shader)
                             
@@ -662,7 +664,7 @@ def bake_to_texture(offscreen_A, offscreen_B, vertices, uvs, uv_indices, loop_in
         shader.bind()
         batch.draw(shader)
 
-def bgl_filter_noise(offscreen_A, noise_buffer, scale, amplitude):    
+def bgl_filter_noise(offscreen_A, noise_buffer, amplitude):    
 
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
     
@@ -680,7 +682,7 @@ def bgl_filter_noise(offscreen_A, noise_buffer, scale, amplitude):
             shader.bind()
             shader.uniform_int("Sampler", 0)
             shader.uniform_int("Noise", 1)
-            shader.uniform_float("amplitude", .01)
+            shader.uniform_float("amplitude", amplitude)
             batch.draw(shader)
     
     copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
