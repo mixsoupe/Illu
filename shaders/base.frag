@@ -1,5 +1,5 @@
 in vec4 finalColor;
-in vec3 orco;
+in vec3 orcofrag;
 
 //	Simplex 3D Noise 
 //	by Ian McEwan, Ashima Arts
@@ -79,6 +79,6 @@ float snoise(vec3 v){
 
 void main()        
 {
-    float noise = snoise(orco*50);
+    float noise = snoise(orcofrag*50);
     gl_FragColor = vec4(noise, finalColor.g, finalColor.b, finalColor.a);
 }
