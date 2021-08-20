@@ -101,8 +101,8 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
     """
     #Noise2
-    bgl_filter_noise2(base_buffer)
-    bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 3, depth_precision = 1, channel = (1,0,0,0))
+    #bgl_filter_noise2(base_buffer)
+    #bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 3, depth_precision = 1, channel = (1,0,0,0))
 
     #Bake    
     if bake_to_uvs:
