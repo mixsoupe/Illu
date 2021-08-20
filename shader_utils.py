@@ -233,8 +233,9 @@ def build_model(objects, get_uv = False):
     #Nettoyage
     bpy.data.meshes.remove(mesh)
     
+    orco = vertices
     if get_uv:
-        return vertices, indices, color_rgba, uvs, uv_indices, loop_indices
+        return vertices, indices, color_rgba, uvs, uv_indices, loop_indices, orco
     else:
         return vertices, indices, color_rgba
 
