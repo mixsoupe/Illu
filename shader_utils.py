@@ -220,8 +220,13 @@ def build_model(objects, get_uv = False):
     normals_to_camera = np.dot(normales, camera_vector)
 
     #final color
-    color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
-    #np.random.seed(2021)
+    np.random.seed(1984)
+    random1 = np.random.rand(len(mesh.vertices))
+    np.random.seed(2021)
+    random2 = np.random.rand(len(mesh.vertices))
+
+    color_rgba = np.c_[random1, random2, normals_to_camera, np.ones(len(mesh.vertices)) ]
+    
     #color_rgba = np.c_[np.random.rand(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
     color_rgba = color_rgba.tolist()
         
