@@ -56,11 +56,9 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
         bgl_shadow(shadow_buffer, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow)         
     
     #Base render
-    bgl_base_render(base_buffer, vertices, indices, colors, orco)
-    copy_buffer(base_buffer, noise_buffer, dim_x, dim_y)
-    bgl_filter_custom(base_buffer, "white", 1)
-    bgl_depth_render(depth_buffer, vertices, indices, colors)
-    
+    bgl_base_render(base_buffer, vertices, indices, colors)
+    bgl_base_noise(noise_buffer, vertices, indices, colors, orco)
+    bgl_depth_render(depth_buffer, vertices, indices, colors)    
 
     if self_shading:
         bgl_filter_expand(base_buffer, dim_x, dim_y, 3)    
@@ -290,7 +288,7 @@ def bgl_shadow(shadow_buffer, vertices, indices, colors,
     shadowmap_buffer.free()
 
     
-def bgl_base_render(offscreen, vertices, indices, colors, orco):
+def bgl_base_render(offscreen, vertices, indices, colors):
 
     camera = bpy.context.scene.camera
     depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -299,6 +297,38 @@ def bgl_base_render(offscreen, vertices, indices, colors, orco):
     projection_matrix = change_camera_matrix(camera, dim_x, dim_y)
 
     shader =  compile_shader("base.vert", "base.frag")
+    batch = batch_for_shader(shader, 'TRIS', {"pos": vertices, "color": colors}, indices=indices)  
+
+    with offscreen.bind():
+        
+        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT)
+        
+        with gpu.matrix.push_pop():
+                           
+            shader.bind()
+            shader.uniform_float("modelMatrix", view_matrix)
+            shader.uniform_float("viewProjectionMatrix", projection_matrix)
+            
+            bgl.glDepthMask(bgl.GL_TRUE)
+            bgl.glClearDepth(1000000);
+            bgl.glClearColor(0.0, 0.0, 0.0, 0.0);
+            bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
+                      
+            bgl.glEnable(bgl.GL_DEPTH_TEST)
+            
+            batch.draw(shader)
+                            
+            bgl.glDisable(bgl.GL_DEPTH_TEST)
+
+def bgl_base_noise(offscreen, vertices, indices, colors, orco):
+
+    camera = bpy.context.scene.camera
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    
+    view_matrix = camera.matrix_world.inverted()
+    projection_matrix = change_camera_matrix(camera, dim_x, dim_y)
+
+    shader =  compile_shader("noise3D.vert", "noise3D.frag")
     batch = batch_for_shader(shader, 'TRIS', {"pos": vertices, "color": colors, "orco": orco}, indices=indices)  
 
     with offscreen.bind():
