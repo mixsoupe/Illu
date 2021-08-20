@@ -185,11 +185,13 @@ def build_model(objects, get_uv = False):
     bm.free()
 
     mesh_orco.calc_loop_triangles()
-        
+
+    vlen_orco = len(mesh_orco.vertices)
+
     #Récupération des données
-    orco = np.empty((vlen, 3), 'f')
+    orco = np.empty((vlen_orco, 3), 'f')
     mesh_orco.vertices.foreach_get(
-        "co", np.reshape(orco, vlen * 3))
+        "co", np.reshape(orco, vlen_orco * 3))
 
 
 

@@ -37,7 +37,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     else:
         dim_y = texture_size
         dim_x = int(dim_y * ratio)
-    
+
     base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     depth_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
