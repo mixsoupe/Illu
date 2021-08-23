@@ -229,9 +229,11 @@ def build_model(objects, get_uv = False):
 
     #Calcul et normalisation zdepth    
     distances = np.linalg.norm(vertices - camera_loc, ord=2, axis=1.)
-    distances = np.interp(distances, (distances.min(), distances.max()), (0, 1))
+    distance_average = np.average(distances)
+
+    #distances = np.interp(distances, (distances.min(), distances.max()), (0, 1))    
+    #depth = distances.reshape(vlen, 1)
     
-    depth = distances.reshape(vlen, 1)
     
     #Check et récupération de l'épaisseur
     thick_eval = False  
@@ -261,7 +263,7 @@ def build_model(objects, get_uv = False):
     bpy.data.meshes.remove(mesh)
         
     if get_uv:
-        return vertices, indices, color_rgba, uvs, uv_indices, loop_indices, orco
+        return vertices, indices, color_rgba, uvs, uv_indices, loop_indices, orco, distance_average
     else:
         return vertices, indices, color_rgba
 

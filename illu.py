@@ -47,7 +47,8 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     noise_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     
     #Creation du modele        
-    vertices, indices, colors, uvs, uv_indices, loop_indices, orco = build_model(obj, get_uv = True)
+    vertices, indices, colors, uvs, uv_indices, loop_indices, orco, distance = build_model(obj, get_uv = True)
+    depth_precision = distance * smoothness /10
 
     #Shadow Buffer
     shadow_objs = get_shadow_objects(exclude = obj)
@@ -68,17 +69,17 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     #Distance field buffer (transparence)    
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)        
     bgl_filter_distance_field(sdf_buffer, scale)    
-    bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20, depth_precision = smoothness/5)
+    bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20, depth_precision = depth_precision)
     merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
     
     #Decal (shading)
     if self_shading:   
-        bgl_filter_decal(base_buffer, depth_buffer, light, scale, smoothness/5, angle)
-        bgl_filter_sss(base_buffer, depth_buffer, samples = int(60*scale), radius = 20*scale, depth_precision = smoothness/5, channel = (1,0,0,0))
+        bgl_filter_decal(base_buffer, depth_buffer, light, scale, depth_precision, angle)
+        bgl_filter_sss(base_buffer, depth_buffer, samples = int(60*scale), radius = 20*scale, depth_precision = depth_precision, channel = (1,0,0,0))
     
     #Ajouter le trait
-    bgl_filter_line(base_buffer, depth_buffer, line_detection, False, smoothness/5)
-    #bgl_filter_sss(base_buffer, depth_buffer, samples = 10, radius = line_scale, depth_precision = smoothness/5, channel = (0,0,1,0))
+    bgl_filter_line(base_buffer, depth_buffer, line_detection, False, depth_precision)
+    bgl_filter_sss(base_buffer, depth_buffer, samples = 10, radius = line_scale, depth_precision = depth_precision, channel = (0,0,1,0))
     bgl_filter_custom(base_buffer, "line_filter", line_scale)
     
     #Merge Shadow             
@@ -89,7 +90,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
     
     #Noise    
-    border= noise_diffusion*200          
+    border= noise_diffusion*100         
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
     bgl_filter_noise(erosion_buffer, noise_buffer, noise_diffusion/30)
     bgl_filter_expand(erosion_buffer, dim_x, dim_y, -border)  
