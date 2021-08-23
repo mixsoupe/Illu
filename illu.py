@@ -69,7 +69,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     #Distance field buffer (transparence)    
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)        
     bgl_filter_distance_field(sdf_buffer, depth_buffer, scale)    
-    bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20)
+    #bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20, depth_precision = smoothness/5)
     merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
     
     #Decal (shading)
