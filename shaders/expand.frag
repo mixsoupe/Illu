@@ -3,7 +3,7 @@ in vec2 vTexCoord;
 uniform sampler2D Sampler;
 uniform vec2 step;
 uniform int expand;
-uniform int normal;
+//uniform int normal;
 
 void main()    
 {   
@@ -22,11 +22,11 @@ void main()
         }
     }
     else{
-        if (color.a > 0.1){
-            color = sampleA;
+        if (sampleA.a < 0.1){
+            color *= 0;
         }
-        if (color.a > 0.1){
-            color = sampleB;
+        if (sampleB.a < 0.1){
+            color *= 0;
         }
     }
 

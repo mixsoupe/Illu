@@ -481,7 +481,6 @@ def get_socket_value(this_node, input, default = 1):
         socket = this_node.inputs[input]
     except:
         object = this_node.objects.name
-        print ("Il faudrait mettre à jour le node 2D Shade de l'objet {}".format(object))
         if (input == "Smoothness"):
             input = "Depth Precision"
             socket = this_node.inputs[input]
