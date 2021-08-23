@@ -24,7 +24,9 @@ void main()
     float rand = random(st);        
 
     vec4 colorBase = texture(Sampler, vTexCoord).rgba;       
-    
+    float current_z = convert32(texture(Depth, vTexCoord).rgb);
+    //float correction = min((1-current_z)/12, 0);
+
     int end = 0;        
     float value = 0.0;
     int iteration = 100;
@@ -34,15 +36,11 @@ void main()
         float rand_angle = angle + (rand*1.0);
                 
         vec2 direction = vec2(cos(rand_angle)/dim_x, sin(rand_angle)/dim_y);
-        float current_z = convert32(texture(Depth, vTexCoord).rgb);
         
-        
-        float distance = scale * max((1-current_z/10), 0.1);
+        float sample_a = texture(Sampler, vTexCoord + direction * scale * i).a;
+        float sample_z = convert32(texture(Depth, vTexCoord + direction * scale * i).rgb); 
 
-        float sample_a = texture(Sampler, vTexCoord + direction * distance * i).a;
-        float sample_z = convert32(texture(Depth, vTexCoord + direction * distance * i).rgb);
-        
-        float delta_z = sample_z - current_z;
+        float delta_z = (sample_z - current_z);
 
         if (sample_a == 0 &&  end == 0) {
             value = 1.0 - (float(i)/iteration);
