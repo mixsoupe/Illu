@@ -64,7 +64,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
 
     if self_shading:
         bgl_filter_expand(base_buffer, dim_x, dim_y, 3)    
-    bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, channel = (1,0,0,0))    
+    #bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, channel = (1,0,0,0))    
     
     #Distance field buffer (transparence)    
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)        
