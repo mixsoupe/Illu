@@ -9,7 +9,9 @@ void main()
 
     //float mergeB = ((color0.b + color1.b)/2 + color0.a)/2;
     //merge = (color0.b + color1.a)/2;
-    float mergeB = (color1.b + color1.a)/2;
+    float mergeB = (color1.b*pow(color1.a, 3) + color1.a)/2;
+
+    float debug = color0.a - color1.a;
 
     gl_FragColor = vec4(color1.r, color1.g, mergeB, color0.a);
     //gl_FragColor = vec4(color0.r, color0.g, merge, color0.a); //Le noise est désactivé dans le shading et dans le distance field

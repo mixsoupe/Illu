@@ -90,10 +90,11 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
     
     #Noise    
-    border= noise_diffusion*50     
+    border= noise_diffusion*20    
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
     bgl_filter_noise(erosion_buffer, noise_buffer, noise_diffusion/30)
     bgl_filter_expand(erosion_buffer, dim_x, dim_y, -border)  
+    bgl_filter_sss(erosion_buffer, depth_buffer, samples = 30, radius = max(noise_diffusion*100, 7), channel = (0,0,0,1))
     
     if self_shading:   
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
