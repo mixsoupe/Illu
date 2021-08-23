@@ -12,12 +12,11 @@ void main()
     float offset_y = mix(-amplitude, amplitude, noise.y+0.25);
 
     vec2 offset = vec2(offset_x, offset_y);
+    offset *= color.g;
 
     vec4 final_color = texture(Sampler, vTexCoord + offset);
 
-    gl_FragColor = final_color;
-
-    
+    gl_FragColor = final_color;   
 
 
 }

@@ -58,6 +58,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     #Base render
     bgl_base_render(base_buffer, vertices, indices, colors)
     bgl_base_noise(noise_buffer, vertices, indices, colors, orco, noise_scale/8)
+    bgl_filter_sss(noise_buffer, depth_buffer, samples = 20, radius = 3, depth_precision = 1)
     bgl_depth_render(depth_buffer, vertices, indices, colors)    
 
     if self_shading:
@@ -74,12 +75,12 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
     if self_shading:   
         bgl_filter_decal(base_buffer, depth_buffer, light, scale, smoothness/5, angle)
         bgl_filter_sss(base_buffer, depth_buffer, samples = int(60*scale), radius = 20*scale, channel = (1,0,0,0))
-    
+
     #Ajouter le trait
     bgl_filter_line(base_buffer, depth_buffer, line_detection, False)
     bgl_filter_sss(base_buffer, depth_buffer, samples = 10, radius = line_scale, channel = (0,0,1,0))
     bgl_filter_custom(base_buffer, "line_filter", line_scale)
-    
+
     #Merge Shadow             
     if len(shadow_objs) > 0:
         if self_shading:
@@ -87,16 +88,15 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
     
-    #Noise
-    
-    border= noise_diffusion*10            
+    #Noise    
+    border= noise_diffusion*200          
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
     bgl_filter_noise(erosion_buffer, noise_buffer, noise_diffusion/30)
-    #bgl_filter_expand(erosion_buffer, dim_x, dim_y, -border)
+    bgl_filter_expand(erosion_buffer, dim_x, dim_y, -border)
   
     
     if self_shading:   
-        merge_buffers(base_buffer, erosion_buffer, "merge_border", dim_x, dim_y)
+        merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
     
