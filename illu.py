@@ -77,8 +77,8 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
         bgl_filter_sss(base_buffer, depth_buffer, samples = int(60*scale), radius = 20*scale, depth_precision = smoothness/5, channel = (1,0,0,0))
     
     #Ajouter le trait
-    bgl_filter_line(base_buffer, depth_buffer, line_detection, False)
-    bgl_filter_sss(base_buffer, depth_buffer, samples = 10, radius = line_scale, depth_precision = smoothness/5, channel = (0,0,1,0))
+    bgl_filter_line(base_buffer, depth_buffer, line_detection, False, smoothness/5)
+    #bgl_filter_sss(base_buffer, depth_buffer, samples = 10, radius = line_scale, depth_precision = smoothness/5, channel = (0,0,1,0))
     bgl_filter_custom(base_buffer, "line_filter", line_scale)
     
     #Merge Shadow             
@@ -551,7 +551,7 @@ def bgl_filter_sss(offscreen_A, depth_buffer, samples = 60, radius = 20, depth_p
     offscreen_B.free()
 
 
-def bgl_filter_line(offscreen_A, depth_buffer, line_detection, border):     
+def bgl_filter_line(offscreen_A, depth_buffer, line_detection, border, depth_precision):     
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "line.frag")                        
@@ -570,6 +570,7 @@ def bgl_filter_line(offscreen_A, depth_buffer, line_detection, border):
             shader.uniform_int("Depth_buffer", 1)
             shader.uniform_int("border", border)
             shader.uniform_float("line_detection", line_detection)
+            shader.uniform_float("depth_precision", depth_precision)
             batch.draw(shader)
 
     copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)

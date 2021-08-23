@@ -3,6 +3,7 @@ in vec2 vTexCoord;
 uniform sampler2D Sampler;
 uniform sampler2D Depth_buffer;
 uniform float line_detection;
+uniform float depth_precision;
 uniform int border;         
 
 mat3 sx = mat3( 
@@ -85,7 +86,7 @@ void main()
     //g = smoothstep(0.2, 0.3, g*2000); // DEFAULT 0.1, 0.4
     n = smoothstep(0.0, 1.0, n); // DEFAULT 0.1, 0.4
 
-    d *= max((1-center_depth*30), 0.05) * line_detection * 1000;
+    d *= max((1-center_depth)/depth_precision, 0.05) * line_detection * 100;
     d *= n * line_detection *10;
     
 

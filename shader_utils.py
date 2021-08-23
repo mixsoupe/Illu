@@ -163,11 +163,11 @@ def build_model(objects, get_uv = False):
       
     normales = np.empty((vlen, 3), 'f')
     mesh.vertices.foreach_get(
-        "normal", np.reshape(normales, vlen * 3))
-    
+        "normal", np.reshape(normales, vlen * 3)) 
 
 
 
+        
 
     #Orco coordinates
     bm = bmesh.new()
