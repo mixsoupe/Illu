@@ -8,7 +8,7 @@ uniform vec4 channel;
 
 //32bits converion
 float convert32 (vec3 input) {
-    return (input.x+ (input.y + input.z/255)/255)*255;
+    return (input.x+ (input.y + input.z/255)/255)*200;
 }   
 
 //generate noise
@@ -31,8 +31,8 @@ void main()
     vec4 colorBase = texture(Sampler, vTexCoord).rgba;    
     float depthM = convert32(texture(Depth, vTexCoord).rgb); //+ texture(Sampler, vTexCoord).a;
 
-    float corrected_precision = max(depth_precision*(1-depthM/10), 1);
-    
+    //float corrected_precision = max(depth_precision*(1-depthM/10), 1);
+
     // Accumulate center sample, multiplying it with its gaussian weight
     vec4 colorBlurred = colorBase;
     colorBlurred *= 0.382;
@@ -53,9 +53,15 @@ void main()
         float depth = convert32(texture(Depth, offset).rgb);
         
         // If the difference in depth is huge, we lerp color back to "colorM":
-        float s = min(corrected_precision * abs(depthM - depth), 1.0);        
+        //float s = min(corrected_precision * abs(depthM - depth), 1.0);
+        
+        float delta_z = abs(depthM - depth) / depth_precision;
+
+        float s = min(delta_z, 1.0);
 
         color = mix(color, colorBase, s);
+
+
 
         // Accumulate:
         colorBlurred += w[i] * color;
