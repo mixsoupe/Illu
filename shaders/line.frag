@@ -31,7 +31,7 @@ void main()
     vec4 center = texture(Depth_buffer, vTexCoord.st).rgba;
     float center_depth = convert32(center.rgb);
 
-    float alpha = texture(Depth_buffer, vTexCoord.st).a;              
+    float alpha = texture(Sampler, vTexCoord.st).a;              
     // Line from depth
     mat3 I;
     for (int i=0; i<3; i++) {

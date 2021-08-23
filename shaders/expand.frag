@@ -24,9 +24,11 @@ void main()
     else{
         if (sampleA.a < 0.1){
             color.a *= 0;
+            color.b *= 0;
         }
         if (sampleB.a < 0.1){
             color.a *= 0;
+            color.b *= 0;
         }
     }
 
