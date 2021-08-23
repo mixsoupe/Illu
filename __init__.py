@@ -192,7 +192,7 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
                     ('NodeSocketFloat', {'name':'Soft Shadow', 'default_value':1.0, 'min_value':0, 'max_value':20}),                    
                     ('NodeSocketFloat', {'name':'Noise Scale', 'default_value':2000, 'min_value':0, 'max_value':10000}),
                     ('NodeSocketFloat', {'name':'Noise Diffusion', 'default_value':0.1, 'min_value':0, 'max_value':2}),
-                    ('NodeSocketInt', {'name':'Line Scale', 'default_value':3, 'min_value':0, 'max_value':10}),
+                    ('NodeSocketFloat', {'name':'Line Scale', 'default_value':1.0, 'min_value':0, 'max_value':100}),
                     ('NodeSocketFloat', {'name':'Line Detection', 'default_value':1.0, 'min_value':0, 'max_value':10}),
                     ('NodeSocketVector', {'name':'Vector', 'default_value':(0.0, 0.0, 0.0)}),
                         
@@ -329,7 +329,7 @@ def update_image(node):
         smoothness = get_socket_value(node, "Smoothness")
         angle = get_socket_value(node, "Angle Compensation")
         soft_shadow = get_socket_value(node, "Soft Shadow")
-        line_scale = int(get_socket_value(node, "Line Scale"))
+        line_scale = get_socket_value(node, "Line Scale")
         line_detection = get_socket_value(node, "Line Detection")    
         noise_scale = get_socket_value(node, "Noise Scale")
         noise_diffusion = get_socket_value(node, "Noise Diffusion") 

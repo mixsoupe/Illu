@@ -1,13 +1,13 @@
 in vec2 vTexCoord;
 uniform sampler2D Sampler;
-uniform int value;
+uniform float value;
 
 void main()    
 {
     vec4 color = texture(Sampler, vTexCoord).rgba;
     float b = color.b;
-    if (b >0){
-        b *=value*value;
+    if (b > 0.5/value){
+        b = 1.0;
     }
     else {
         b = 0;

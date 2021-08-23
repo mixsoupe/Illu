@@ -90,7 +90,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
     
     #Noise    
-    border= noise_diffusion*100         
+    border= noise_diffusion*50         
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
     bgl_filter_noise(erosion_buffer, noise_buffer, noise_diffusion/30)
     bgl_filter_expand(erosion_buffer, dim_x, dim_y, -border)  
@@ -717,7 +717,7 @@ def bgl_filter_custom(offscreen_A, filter, value):
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
             shader.bind()
             shader.uniform_int("Sampler", 0)
-            shader.uniform_int("value", value)
+            shader.uniform_float("value", value)
             batch.draw(shader)
     
     copy_buffer(offscreen_B, offscreen_A, dim_x, dim_y)
