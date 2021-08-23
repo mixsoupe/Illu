@@ -62,14 +62,10 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
         bgl_filter_expand(base_buffer, dim_x, dim_y, 3)    
     bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, depth_precision = 1, channel = (1,0,0,0))
     
-    #Distance field buffer (transparence)
-    
-    copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)
-        
-    bgl_filter_distance_field(sdf_buffer, depth_buffer, scale)
-    
+    #Distance field buffer (transparence)    
+    copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)        
+    bgl_filter_distance_field(sdf_buffer, depth_buffer, scale)    
     bgl_filter_sss(sdf_buffer, depth_buffer, samples = 20, radius = 20)
-    
     merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
     
     #Decal (shading)
@@ -89,13 +85,14 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
     
-    #Noise            
+    #Noise
+    
+    border= noise_diffusion*10            
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
-    #bgl_filter_noise(erosion_buffer, noise_scale, noise_diffusion/200)
-    bgl_filter_expand(erosion_buffer, dim_x, dim_y, -3)
+    bgl_filter_expand(erosion_buffer, dim_x, dim_y, -border)
+    #bgl_filter_noise(erosion_buffer, dim_x, dim_y, -border)   
     
     if self_shading:   
-        #merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
         merge_buffers(base_buffer, erosion_buffer, "merge_border", dim_x, dim_y)
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
@@ -566,7 +563,7 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y, value):
     else:
         expand = 0
 
-    iteration = abs(value)
+    iteration = int(abs(value))
     for i in range (iteration):
         step = (1/dim_x, 0)
         with offscreen_B.bind():                   
