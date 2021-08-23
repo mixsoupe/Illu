@@ -87,7 +87,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow", dim_x, dim_y)
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
-    """
+    
     #Noise    
     border= noise_diffusion*200          
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
@@ -98,7 +98,7 @@ def generate_images(obj, image_name, light, scale, smoothness, angle, texture_si
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
-    """
+    
     #Bake    
     if bake_to_uvs:
         bake_buffer = gpu.types.GPUOffScreen(texture_size, texture_size)           
