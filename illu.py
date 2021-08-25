@@ -447,7 +447,7 @@ def bgl_filter_distance_field(offscreen_A, scale,  factor = True):
     batch = batch2d(shader, dim_x, dim_y)
        
     step = 1
-    div = 80 * scale
+    div = max(80 * scale, 0.001)
     iteration = int(div/2) 
     beta = 1 / div
     offset = (step / dim_x, 0)
