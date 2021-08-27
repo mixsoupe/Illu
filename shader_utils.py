@@ -128,21 +128,22 @@ def calc_proj_matrix(fov = 50, ortho = 0, clip_start = 6, clip_end = 100, dim_x 
 
 def build_model(objects, get_uv = False):
     camera = bpy.context.scene.camera
-    
 
     #Préparation du mesh 
     mesh = bpy.data.meshes.new("temp_mesh")
     bm = bmesh.new()
 
+    object_state = {}
     for o in objects: #Astuce pour fusionner plusieurs objets
         bm_temp = bmesh.new()
-        subsurf = {}
+        subsurfs = {}
         #Disable subsurf
         for modifier in o.modifiers:
             if modifier.type == "SUBSURF":
+                subsurfs[modifier.name] = (modifier.show_viewport, modifier.show_render)
                 modifier.show_viewport = False
                 modifier.show_render = False
-                print (modifier)
+        object_state[o.name] = subsurfs
         depsgraph = bpy.context.evaluated_depsgraph_get()          
         bm_temp.from_object(object=o, depsgraph=depsgraph, deform=True)
         bm_temp.transform(o.matrix_world)
@@ -151,15 +152,17 @@ def build_model(objects, get_uv = False):
         bm.from_mesh(mesh)
         obj = o
 
-    bmesh.ops.triangulate(bm, faces=bm.faces[:])
-    bm.to_mesh(mesh)
-    bm.free()
-
-    mesh.calc_loop_triangles()
+    bmesh.ops.triangulate(bm, faces=bm.faces[:]) #SLOW
     
+    bm.to_mesh(mesh)
+      
+    bm.free()
+    
+    mesh.calc_loop_triangles()
+
     vlen = len(mesh.vertices)
     tlen = len(mesh.loop_triangles)
-    
+     
     #Récupération des données
     indices = np.empty((tlen, 3), 'i')    
     mesh.loop_triangles.foreach_get(
@@ -173,12 +176,9 @@ def build_model(objects, get_uv = False):
     mesh.vertices.foreach_get(
         "normal", np.reshape(normales, vlen * 3)) 
 
-
-
-        
-
     #Orco coordinates
     bm = bmesh.new()
+
     mesh_orco = bpy.data.meshes.new("temp_mesh_orco")
     for o in objects: #Astuce pour fusionner plusieurs objets
         bm_temp = bmesh.new()            
@@ -187,26 +187,22 @@ def build_model(objects, get_uv = False):
         bm_temp.free()
         bm.from_mesh(mesh_orco)
         obj = o
-
-    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    
+    bmesh.ops.triangulate(bm, faces=bm.faces[:]) 
+    
     bm.to_mesh(mesh)
     bm.free()
-
+    
     mesh_orco.calc_loop_triangles()
-
+    
     vlen_orco = len(mesh_orco.vertices)
-
+     
     #Récupération des données
     orco = np.empty((vlen_orco, 3), 'f')
     mesh_orco.vertices.foreach_get(
         "co", np.reshape(orco, vlen_orco * 3))
 
-
-
-
-
-
-
+    t = time.time()
     if get_uv:
         # uvs = coordonnée de chaque uv point
         # uv_indices = les index des uv point pour chaque loop
@@ -227,21 +223,16 @@ def build_model(objects, get_uv = False):
                 uvs.append(uv_coords)                
                 loop_indices.append(vert_idx)
             uv_indices.append(list(face.loop_indices))
-
-          
+ 
         uvs = np.asarray(uvs)
         uv_indices = np.asarray(uv_indices, dtype = np.int32)
         loop_indices = np.asarray(loop_indices, dtype = np.int32) 
-
+    print ((time.time()-t)*1000) 
     camera_loc = camera.location  
 
     #Calcul et normalisation zdepth    
     distances = np.linalg.norm(vertices - camera_loc, ord=2, axis=1.)
     distance_average = np.average(distances)
-
-    #distances = np.interp(distances, (distances.min(), distances.max()), (0, 1))    
-    #depth = distances.reshape(vlen, 1)
-    
     
     #Check et récupération de l'épaisseur
     thick_eval = False  
@@ -269,7 +260,15 @@ def build_model(objects, get_uv = False):
         
     #Nettoyage
     bpy.data.meshes.remove(mesh)
-        
+    
+    #REnable subsurf
+    
+    for o in objects:
+        for modifier in o.modifiers:
+            if modifier.type == "SUBSURF":
+                modifier.show_viewport = object_state[o.name][modifier.name][0]
+                modifier.show_render = object_state[o.name][modifier.name][1]
+    
     if get_uv:
         return vertices, indices, color_rgba, uvs, uv_indices, loop_indices, orco, distance_average
     else:
