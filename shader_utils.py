@@ -128,14 +128,22 @@ def calc_proj_matrix(fov = 50, ortho = 0, clip_start = 6, clip_end = 100, dim_x 
 
 def build_model(objects, get_uv = False):
     camera = bpy.context.scene.camera
-    depsgraph = bpy.context.evaluated_depsgraph_get()
+    
 
     #Préparation du mesh 
     mesh = bpy.data.meshes.new("temp_mesh")
     bm = bmesh.new()
 
     for o in objects: #Astuce pour fusionner plusieurs objets
-        bm_temp = bmesh.new()            
+        bm_temp = bmesh.new()
+        subsurf = {}
+        #Disable subsurf
+        for modifier in o.modifiers:
+            if modifier.type == "SUBSURF":
+                modifier.show_viewport = False
+                modifier.show_render = False
+                print (modifier)
+        depsgraph = bpy.context.evaluated_depsgraph_get()          
         bm_temp.from_object(object=o, depsgraph=depsgraph, deform=True)
         bm_temp.transform(o.matrix_world)
         bm_temp.to_mesh(mesh)
