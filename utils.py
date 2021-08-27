@@ -24,7 +24,7 @@ from mathutils import Matrix, Vector
 import mathutils
 
 def load_shader(file):
-    addon_path = os.path.realpath(__file__).split("shader_utils.py")[0]
+    addon_path = os.path.realpath(__file__).split("utils.py")[0]
     shaders_path = os.path.join(addon_path,"shaders", file)
 
     f = open(shaders_path, 'r')

@@ -289,7 +289,7 @@ class ILLU_OT_update_all(bpy.types.Operator):
     bl_label = "Update All"
     
     def execute(self, context):
-        rendered, failed = update(all = True)
+        rendered, failed = render(all = True)
         
         print (failed)
         if rendered:
@@ -305,7 +305,7 @@ class ILLU_OT_update_selected(bpy.types.Operator):
     bl_label = "Update Selected"
     
     def execute(self, context):
-        rendered, failed = update()
+        rendered, failed = render()
         
         print (failed)
         if rendered:
@@ -314,85 +314,12 @@ class ILLU_OT_update_selected(bpy.types.Operator):
             self.report({'WARNING'}, '{} render failed'.format(failed))  
 
         return {'FINISHED'}
-#TEST
-class Geometry:
-  x = 10
 
 #FUNCTIONS
-def update_image(node):
-    geometry = Geometry()
-    
-    obj = node.objects
-    if obj is not None:
-        image_name = node.node_tree.nodes['Image'].image.name
-        texture_size = int(node.texture_size)
-        shadow_size = int(node.shadow_size)
-        self_shading = node.self_shading
-        bake_to_uvs = node.bake_to_uvs
-        light = get_socket_value(node, "Light")
-        scale = get_socket_value(node, "Scale")
-        smoothness = get_socket_value(node, "Smoothness")
-        angle = get_socket_value(node, "Angle Compensation")
-        soft_shadow = get_socket_value(node, "Soft Shadow")
-        line_scale = get_socket_value(node, "Line Scale")
-        line_detection = get_socket_value(node, "Line Detection")    
-        noise_scale = get_socket_value(node, "Noise Scale")
-        noise_diffusion = get_socket_value(node, "Noise Diffusion") 
-        
-        generate_images(geometry,
-                        obj, 
-                        image_name, 
-                        light, 
-                        scale, 
-                        smoothness, 
-                        angle, 
-                        texture_size, 
-                        shadow_size, 
-                        soft_shadow, 
-                        self_shading, 
-                        bake_to_uvs,
-                        line_scale,
-                        line_detection,
-                        noise_scale, 
-                        noise_diffusion
-                        )
-        
-        return True
-
-def update(all = False):
-    rendered = []
-    failed = []
-    scene_materials = []    
-
-    if all:
-        objs = bpy.context.scene.objects
-    else:        
-        objs = bpy.context.selected_objects
-    
-    for obj in objs:
-        for slot in obj.material_slots:
-            material = slot.material
-            if material:
-                scene_materials.append(material)
-
-    for material in bpy.data.materials:
-        if material in scene_materials:
-            if material.node_tree is not None:
-                for node_tree in traverse_node_tree(material.node_tree):
-                    for node in node_tree.nodes:
-                        if node.bl_idname == 'ILLU_2DShade':              
-                            result = update_image(node)
-                            if result:
-                                rendered.append(material.name)
-                            else:
-                                failed.append(material.name)
-    
-    return rendered, failed
-
 @persistent
 def update_handler(dummy):
     if bpy.context.scene.playback:        
-        update(all = True)
+        render(all = True)
 
 #REGISTER UNREGISTER
 classes = (
