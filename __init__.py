@@ -314,9 +314,14 @@ class ILLU_OT_update_selected(bpy.types.Operator):
             self.report({'WARNING'}, '{} render failed'.format(failed))  
 
         return {'FINISHED'}
+#TEST
+class Geometry:
+  x = 10
 
 #FUNCTIONS
 def update_image(node):
+    geometry = Geometry()
+    
     obj = node.objects
     if obj is not None:
         image_name = node.node_tree.nodes['Image'].image.name
@@ -334,7 +339,8 @@ def update_image(node):
         noise_scale = get_socket_value(node, "Noise Scale")
         noise_diffusion = get_socket_value(node, "Noise Diffusion") 
         
-        generate_images(obj, 
+        generate_images(geometry,
+                        obj, 
                         image_name, 
                         light, 
                         scale, 

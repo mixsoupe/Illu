@@ -23,8 +23,9 @@ from mathutils import Matrix, Vector, Euler
 
 from . shader_utils import *
 
-def generate_images(obj, image_name, light, scale, smoothness, angle, texture_size, shadow_size, soft_shadow, self_shading, bake_to_uvs, line_scale, line_detection, noise_scale, noise_diffusion):
+def generate_images(geometry, obj, image_name, light, scale, smoothness, angle, texture_size, shadow_size, soft_shadow, self_shading, bake_to_uvs, line_scale, line_detection, noise_scale, noise_diffusion):
     T = time.time()
+    print (geometry.x)
     global dim_x
     global dim_y
     dim_x, dim_y =  get_resolution()

@@ -227,7 +227,7 @@ def build_model(objects, get_uv = False):
         uvs = np.asarray(uvs)
         uv_indices = np.asarray(uv_indices, dtype = np.int32)
         loop_indices = np.asarray(loop_indices, dtype = np.int32) 
-    print ((time.time()-t)*1000) 
+    #print ((time.time()-t)*1000) 
     camera_loc = camera.location  
 
     #Calcul et normalisation zdepth    
