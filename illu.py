@@ -25,8 +25,10 @@ class Geometry:
 def render(all = False):
     rendered = []
     failed = []
-    scene_materials = []    
 
+    #Get 2d_shade nodes
+    nodes = []
+    scene_materials = []     
     if all:
         objs = bpy.context.scene.objects
     else:        
@@ -43,64 +45,48 @@ def render(all = False):
             if material.node_tree is not None:
                 for node_tree in traverse_node_tree(material.node_tree):
                     for node in node_tree.nodes:
-                        if node.bl_idname == 'ILLU_2DShade':              
-                            result = render_node(node)
-                            if result:
-                                rendered.append(material.name)
-                            else:
-                                failed.append(material.name)
+                        if node.bl_idname == 'ILLU_2DShade':
+                            nodes.append (node)
+
+    #Render nodes                      
+    for node in nodes:
+        result = render_node(node)
+        if result:
+            rendered.append(material.name)
+        else:
+            failed.append(material.name)
     
     return rendered, failed
 
 
 def render_node(node):
     geometry = Geometry()
-
-    obj = node.objects
-    if obj is not None:
-        image_name = node.node_tree.nodes['Image'].image.name
-        texture_size = int(node.texture_size)
-        shadow_size = int(node.shadow_size)
-        self_shading = node.self_shading
-        bake_to_uvs = node.bake_to_uvs
-        light = get_socket_value(node, "Light")
-        scale = get_socket_value(node, "Scale")
-        smoothness = get_socket_value(node, "Smoothness")
-        angle = get_socket_value(node, "Angle Compensation")
-        soft_shadow = get_socket_value(node, "Soft Shadow")
-        line_scale = get_socket_value(node, "Line Scale")
-        line_detection = get_socket_value(node, "Line Detection")    
-        noise_scale = get_socket_value(node, "Noise Scale")
-        noise_diffusion = get_socket_value(node, "Noise Diffusion") 
-        
-        render_process(geometry,
-                        obj, 
-                        image_name, 
-                        light, 
-                        scale, 
-                        smoothness, 
-                        angle, 
-                        texture_size, 
-                        shadow_size, 
-                        soft_shadow, 
-                        self_shading, 
-                        bake_to_uvs,
-                        line_scale,
-                        line_detection,
-                        noise_scale, 
-                        noise_diffusion
-                        )
-        
-        return True
-
-
-def render_process(geometry, obj, image_name, light, scale, smoothness, angle, texture_size, shadow_size, soft_shadow, self_shading, bake_to_uvs, line_scale, line_detection, noise_scale, noise_diffusion):
-    T = time.time()
     print (geometry.x)
 
+    #Get infos
+    obj = node.objects
+    if obj is None:
+        return False
+
+    obj = [obj,]
+
+    image_name = node.node_tree.nodes['Image'].image.name
+    texture_size = int(node.texture_size)
+    shadow_size = int(node.shadow_size)
+    self_shading = node.self_shading
+    bake_to_uvs = node.bake_to_uvs
+    light = get_socket_value(node, "Light")
+    scale = get_socket_value(node, "Scale")
+    smoothness = get_socket_value(node, "Smoothness")
+    angle = get_socket_value(node, "Angle Compensation")
+    soft_shadow = get_socket_value(node, "Soft Shadow")
+    line_scale = get_socket_value(node, "Line Scale")
+    line_detection = get_socket_value(node, "Line Detection")    
+    noise_scale = get_socket_value(node, "Noise Scale")
+    noise_diffusion = get_socket_value(node, "Noise Diffusion") 
+        
     dim_x, dim_y =  get_resolution()
     ratio = dim_x / dim_y
-    obj = [obj,]
     
     if ratio > 1:        
         dim_x = texture_size
@@ -109,6 +95,7 @@ def render_process(geometry, obj, image_name, light, scale, smoothness, angle, t
         dim_y = texture_size
         dim_x = int(dim_y * ratio)
 
+    #Create buffers    
     base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     depth_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
@@ -204,5 +191,7 @@ def render_process(geometry, obj, image_name, light, scale, smoothness, angle, t
 
     #Enregistrement des images
     buffer_to_image( image_name, buffer, dim_x, dim_y)
+
+    return True
 
     #print ((time.time()-T)*1000)
