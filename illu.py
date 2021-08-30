@@ -18,9 +18,7 @@ import time
 
 from . utils import *
 from . shaders import *
-
-class Geometry:
-  x = 10
+from . geometry import *
 
 def render(all = False):
     rendered = []
@@ -46,7 +44,31 @@ def render(all = False):
                 for node_tree in traverse_node_tree(material.node_tree):
                     for node in node_tree.nodes:
                         if node.bl_idname == 'ILLU_2DShade':
-                            nodes.append (node)
+                            if node.objects is not None:
+                                nodes.append (node)
+
+    #Build scene geometry
+    geo_objects = []
+    already_done = {}
+    shadow_objects = []
+    for node in nodes:
+        node.objects    
+        geometry = Geometry(node.objects, node)
+        geo_objects.append(geometry)
+        already_done[node.objects] = geometry
+
+    
+    for obj in bpy.context.scene.objects:
+        if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:
+            if node.objects in already_done.keys():
+                geometry = already_done[node.objects]
+            else :                
+                geometry = Geometry(node.objects)
+            shadow_objects.append(geometry)
+
+    
+    print (geo_objects[0].smoothness)
+                
 
     #Render nodes                      
     for node in nodes:
@@ -60,8 +82,6 @@ def render(all = False):
 
 
 def render_node(node):
-    geometry = Geometry()
-    print (geometry.x)
 
     #Get infos
     obj = node.objects
