@@ -187,7 +187,7 @@ def render_process(geometry, obj, image_name, light, scale, smoothness, angle, t
         dim_y = texture_size
         
     else:
-        bgl_filter_scale(base_buffer, upscale_factor())
+        bgl_filter_scale(base_buffer, dim_x, dim_y, upscale_factor())
         with base_buffer.bind():        
             buffer = bgl.Buffer(bgl.GL_FLOAT, dim_x * dim_y * 4)        
             bgl.glReadBuffer(bgl.GL_BACK)        

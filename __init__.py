@@ -272,7 +272,7 @@ class ILLU_OT_update(bpy.types.Operator):
     def execute(self, context):        
         node = context.active_node
            
-        result = update_image(node)
+        result = render(node)
         material_name = context.material.name
 
         if result:            
