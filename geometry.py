@@ -41,11 +41,11 @@ class Geometry:
             self.noise_scale = get_socket_value(node, "Noise Scale")
             self.noise_diffusion = get_socket_value(node, "Noise Diffusion")
 
-            self.build_model([object,])
+        self.build_model([object,])
 
 
 
-    def build_model(self, objects, get_uv = True):
+    def build_model(self, objects, get_uv = False):
         camera = bpy.context.scene.camera
 
         #Préparation du mesh 

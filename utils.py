@@ -435,6 +435,22 @@ def get_shadow_objects(exclude):
                 
     return shadow_objs
 
+def build_shadow(shadow_objects, geo):
+    try:
+        shadow_objects.remove(geo)
+    except:
+        pass
+
+    vertices = np.empty(shape=[0, D3], dtype = np.float32)    
+    indices = np.empty(shape=[0, 3], dtype = np.int32)
+    
+    for shadow_object in shadow_objects:
+        obj_indices = shadow_object.indices + len(vertices)
+        vertices = np.append(vertices, shadow_object.vertices, axis = 0) 
+        indices = np.append(indices, obj_indices, axis = 0)
+        
+    return vertices, indices    
+
 def calc_frustrum(view_matrix, vertices):
 
     vertices4 = np.c_[vertices, np.ones(vertices.shape[0])]

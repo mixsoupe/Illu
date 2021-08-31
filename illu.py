@@ -59,12 +59,14 @@ def render(all = False):
 
     
     for obj in bpy.context.scene.objects:
-        if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:
-            if node.objects in already_done.keys():
+        if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:            
+            if obj in already_done.keys():
                 geometry = already_done[node.objects]
             else :                
-                geometry = Geometry(node.objects)
+                geometry = Geometry(obj)
             shadow_objects.append(geometry)
+    
+
 
     #Render nodes                      
     for geo_object in geo_objects:
@@ -109,6 +111,13 @@ def render_node(geo, shadow_objects):
         vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs) 
         bgl_shadow(shadow_buffer, dim_x, dim_y, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow)         
     """
+    if shadow_objects:        
+        #shadow_objs = get_shadow_objects(exclude = geo.object.name)
+        #vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs)
+        vertices_shadow, indices_shadow = build_shadow(shadow_objects, geo)
+        bgl_shadow(shadow_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors, vertices_shadow, indices_shadow, geo.light, geo.shadow_size, geo.soft_shadow)         
+
+
     #Base render
     bgl_base_render(base_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)
     bgl_base_noise(noise_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors, geo.orco, geo.noise_scale/8)
@@ -136,13 +145,13 @@ def render_node(geo, shadow_objects):
     bgl_filter_custom(base_buffer, dim_x, dim_y, "line_filter", geo.line_scale)
     
     #Merge Shadow
-    """       
-    if len(shadow_objs) > 0:
-        if self_shading:
+          
+    if shadow_objects:
+        if geo.self_shading:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow", dim_x, dim_y)
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
-    """   
+      
     #Noise    
     border= geo.noise_diffusion*20    
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
@@ -166,8 +175,8 @@ def render_node(geo, shadow_objects):
             bgl.glReadBuffer(bgl.GL_BACK)        
             bgl.glReadPixels(0, 0, geo.texture_size, geo.texture_size, bgl.GL_RGBA, bgl.GL_FLOAT, buffer)
         bake_buffer.free()
-        dim_x = texture_size
-        dim_y = texture_size
+        dim_x = geo.texture_size
+        dim_y = geo.texture_size
         
     else:
         bgl_filter_scale(base_buffer, dim_x, dim_y, upscale_factor())
