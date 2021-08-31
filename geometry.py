@@ -39,157 +39,165 @@ class Geometry:
             self.line_scale = get_socket_value(node, "Line Scale")
             self.line_detection = get_socket_value(node, "Line Detection")    
             self.noise_scale = get_socket_value(node, "Noise Scale")
-            self.noise_diffusion = get_socket_value(node, "Noise Diffusion") 
+            self.noise_diffusion = get_socket_value(node, "Noise Diffusion")
+
+            self.build_model([object,])
 
 
 
-def build_model2(objects, get_uv = False):
-    camera = bpy.context.scene.camera
+    def build_model(self, objects, get_uv = True):
+        camera = bpy.context.scene.camera
 
-    #Préparation du mesh 
-    mesh = bpy.data.meshes.new("temp_mesh")
-    bm = bmesh.new()
+        #Préparation du mesh 
+        mesh = bpy.data.meshes.new("temp_mesh")
+        bm = bmesh.new()
 
-    object_state = {}
-    for o in objects: #Astuce pour fusionner plusieurs objets
-        bm_temp = bmesh.new()
-        subsurfs = {}
-        #Disable subsurf
-        for modifier in o.modifiers:
-            if modifier.type == "SUBSURF":
-                subsurfs[modifier.name] = (modifier.show_viewport, modifier.show_render)
-                modifier.show_viewport = False
-                modifier.show_render = False
-        object_state[o.name] = subsurfs
-        depsgraph = bpy.context.evaluated_depsgraph_get()          
-        bm_temp.from_object(object=o, depsgraph=depsgraph, deform=True)
-        bm_temp.transform(o.matrix_world)
-        bm_temp.to_mesh(mesh)
-        bm_temp.free()
-        bm.from_mesh(mesh)
-        obj = o
+        object_state = {}
+        for o in objects: #Astuce pour fusionner plusieurs objets
+            bm_temp = bmesh.new()
+            subsurfs = {}
+            #Disable subsurf
+            for modifier in o.modifiers:
+                if modifier.type == "SUBSURF":
+                    subsurfs[modifier.name] = (modifier.show_viewport, modifier.show_render)
+                    modifier.show_viewport = False
+                    modifier.show_render = False
+            object_state[o.name] = subsurfs
+            depsgraph = bpy.context.evaluated_depsgraph_get()          
+            bm_temp.from_object(object=o, depsgraph=depsgraph, deform=True)
+            bm_temp.transform(o.matrix_world)
+            bm_temp.to_mesh(mesh)
+            bm_temp.free()
+            bm.from_mesh(mesh)
+            obj = o
 
-    bmesh.ops.triangulate(bm, faces=bm.faces[:]) #SLOW
-    
-    bm.to_mesh(mesh)
-      
-    bm.free()
-    
-    mesh.calc_loop_triangles()
-
-    vlen = len(mesh.vertices)
-    tlen = len(mesh.loop_triangles)
-     
-    #Récupération des données
-    indices = np.empty((tlen, 3), 'i')    
-    mesh.loop_triangles.foreach_get(
-        "vertices", np.reshape(indices, tlen * 3))
-
-    vertices = np.empty((vlen, 3), 'f')
-    mesh.vertices.foreach_get(
-        "co", np.reshape(vertices, vlen * 3))
-      
-    normales = np.empty((vlen, 3), 'f')
-    mesh.vertices.foreach_get(
-        "normal", np.reshape(normales, vlen * 3)) 
-
-    #Orco coordinates
-    bm = bmesh.new()
-
-    mesh_orco = bpy.data.meshes.new("temp_mesh_orco")
-    for o in objects: #Astuce pour fusionner plusieurs objets
-        bm_temp = bmesh.new()            
-        bm_temp.from_object(object=o, depsgraph=depsgraph, deform=False)
-        bm_temp.to_mesh(mesh_orco)
-        bm_temp.free()
-        bm.from_mesh(mesh_orco)
-        obj = o
-    
-    bmesh.ops.triangulate(bm, faces=bm.faces[:]) 
-    
-    bm.to_mesh(mesh)
-    bm.free()
-    
-    mesh_orco.calc_loop_triangles()
-    
-    vlen_orco = len(mesh_orco.vertices)
-     
-    #Récupération des données
-    orco = np.empty((vlen_orco, 3), 'f')
-    mesh_orco.vertices.foreach_get(
-        "co", np.reshape(orco, vlen_orco * 3))
-
-    t = time.time()
-    if get_uv:
-        # uvs = coordonnée de chaque uv point
-        # uv_indices = les index des uv point pour chaque loop
-        # uv_vertices = l'indice du vertex correspondant à l'uv
-
-        #FIX convert to numpy
-        uvs = []
-        uv_indices = []
-        loop_indices = []
-
-        for uv_layer in mesh.uv_layers:
-            if uv_layer.active_render:
-                break
-
-        for face in mesh.polygons:        
-            for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
-                uv_coords = uv_layer.data[loop_idx].uv
-                uvs.append(uv_coords)                
-                loop_indices.append(vert_idx)
-            uv_indices.append(list(face.loop_indices))
- 
-        uvs = np.asarray(uvs)
-        uv_indices = np.asarray(uv_indices, dtype = np.int32)
-        loop_indices = np.asarray(loop_indices, dtype = np.int32) 
-    #print ((time.time()-t)*1000) 
-    camera_loc = camera.location  
-
-    #Calcul et normalisation zdepth    
-    distances = np.linalg.norm(vertices - camera_loc, ord=2, axis=1.)
-    distance_average = np.average(distances)
-    
-    #Check et récupération de l'épaisseur
-    thick_eval = False  
-    vgroups = obj.vertex_groups
-
-    for vg in vgroups:
-        if vg.name == "Thickness":
-            thick_eval = True
-            break
-    if thick_eval:
-        weight_list = []
-        for i in range(len(mesh.vertices)):
-            weight_list.append(vg.weight(i))
-        weights = np.asarray(weight_list)
-    else:
-        weights = np.ones(len(mesh.vertices))
-
-    #Calcul des normales
-    camera_vector = camera.matrix_world.to_quaternion() @ Vector((0.0, 0.0, 1.0))
-    normals_to_camera = np.dot(normales, camera_vector)
-
-    #final color  
-    color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
-    color_rgba = color_rgba.tolist()
+        bmesh.ops.triangulate(bm, faces=bm.faces[:]) #SLOW
         
-    #Nettoyage
-    bpy.data.meshes.remove(mesh)
+        bm.to_mesh(mesh)
+        
+        bm.free()
+        
+        mesh.calc_loop_triangles()
+
+        vlen = len(mesh.vertices)
+        tlen = len(mesh.loop_triangles)
+        
+        #Récupération des données
+        indices = np.empty((tlen, 3), 'i')    
+        mesh.loop_triangles.foreach_get(
+            "vertices", np.reshape(indices, tlen * 3))
+
+        vertices = np.empty((vlen, 3), 'f')
+        mesh.vertices.foreach_get(
+            "co", np.reshape(vertices, vlen * 3))
+        
+        normales = np.empty((vlen, 3), 'f')
+        mesh.vertices.foreach_get(
+            "normal", np.reshape(normales, vlen * 3)) 
+
+        #Orco coordinates
+        bm = bmesh.new()
+
+        mesh_orco = bpy.data.meshes.new("temp_mesh_orco")
+        for o in objects: #Astuce pour fusionner plusieurs objets
+            bm_temp = bmesh.new()            
+            bm_temp.from_object(object=o, depsgraph=depsgraph, deform=False)
+            bm_temp.to_mesh(mesh_orco)
+            bm_temp.free()
+            bm.from_mesh(mesh_orco)
+            obj = o
+        
+        bmesh.ops.triangulate(bm, faces=bm.faces[:]) 
+        
+        bm.to_mesh(mesh)
+        bm.free()
+        
+        mesh_orco.calc_loop_triangles()
+        
+        vlen_orco = len(mesh_orco.vertices)
+        
+        #Récupération des données
+        orco = np.empty((vlen_orco, 3), 'f')
+        mesh_orco.vertices.foreach_get(
+            "co", np.reshape(orco, vlen_orco * 3))
+
+        t = time.time()
+        if get_uv:
+            # uvs = coordonnée de chaque uv point
+            # uv_indices = les index des uv point pour chaque loop
+            # uv_vertices = l'indice du vertex correspondant à l'uv
+
+            #FIX convert to numpy
+            uvs = []
+            uv_indices = []
+            loop_indices = []
+
+            for uv_layer in mesh.uv_layers:
+                if uv_layer.active_render:
+                    break
+
+            for face in mesh.polygons:        
+                for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
+                    uv_coords = uv_layer.data[loop_idx].uv
+                    uvs.append(uv_coords)                
+                    loop_indices.append(vert_idx)
+                uv_indices.append(list(face.loop_indices))
     
-    #REnable subsurf
-    
-    for o in objects:
-        for modifier in o.modifiers:
-            if modifier.type == "SUBSURF":
-                modifier.show_viewport = object_state[o.name][modifier.name][0]
-                modifier.show_render = object_state[o.name][modifier.name][1]
-    
-    if get_uv:
-        return vertices, indices, color_rgba, uvs, uv_indices, loop_indices, orco, distance_average
-    else:
-        return vertices, indices, color_rgba
+            uvs = np.asarray(uvs)
+            uv_indices = np.asarray(uv_indices, dtype = np.int32)
+            loop_indices = np.asarray(loop_indices, dtype = np.int32) 
+        #print ((time.time()-t)*1000) 
+        camera_loc = camera.location  
+
+        #Calcul et normalisation zdepth    
+        distances = np.linalg.norm(vertices - camera_loc, ord=2, axis=1.)
+        distance_average = np.average(distances)
+        
+        #Check et récupération de l'épaisseur
+        thick_eval = False  
+        vgroups = obj.vertex_groups
+
+        for vg in vgroups:
+            if vg.name == "Thickness":
+                thick_eval = True
+                break
+        if thick_eval:
+            weight_list = []
+            for i in range(len(mesh.vertices)):
+                weight_list.append(vg.weight(i))
+            weights = np.asarray(weight_list)
+        else:
+            weights = np.ones(len(mesh.vertices))
+
+        #Calcul des normales
+        camera_vector = camera.matrix_world.to_quaternion() @ Vector((0.0, 0.0, 1.0))
+        normals_to_camera = np.dot(normales, camera_vector)
+
+        #final color  
+        color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
+        color_rgba = color_rgba.tolist()
+            
+        #Nettoyage
+        bpy.data.meshes.remove(mesh)
+        
+        #REnable subsurf
+        
+        for o in objects:
+            for modifier in o.modifiers:
+                if modifier.type == "SUBSURF":
+                    modifier.show_viewport = object_state[o.name][modifier.name][0]
+                    modifier.show_render = object_state[o.name][modifier.name][1]
+        
+
+        self.vertices = vertices
+        self.indices = indices
+        self.colors = color_rgba
+        if get_uv:
+            self.uvs = uvs
+            self.uv_indices = uv_indices
+            self.loop_indices = loop_indices
+        self.orco = orco
+        self.distance = distance_average
 
 
 
