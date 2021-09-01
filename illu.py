@@ -60,15 +60,14 @@ def render(all = False):
 
     
     for obj in bpy.context.scene.objects:
-        if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:            
-            if obj in already_done.keys():
-                geometry = already_done[node.objects]
-            else :                
+        if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:  
+            if obj in already_done.keys():                
+                geometry = already_done[obj]
+            else :            
                 geometry = Geometry(obj)
+            
             shadow_objects.append(geometry)
-    
-
-
+            
     #Render nodes                      
     for geo_object in geo_objects:
         result = render_node(geo_object, shadow_objects)
