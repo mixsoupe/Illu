@@ -53,8 +53,6 @@ class Geometry:
         mesh = bpy.data.meshes.new("temp_mesh")
         bm = bmesh.new()
 
-        object_state = {}
-
         bm_temp = bmesh.new()
         subsurfs = {}
 
@@ -64,7 +62,7 @@ class Geometry:
                 subsurfs[modifier.name] = (modifier.show_viewport, modifier.show_render)
                 modifier.show_viewport = False
                 modifier.show_render = False
-        object_state[obj.name] = subsurfs
+
         depsgraph = bpy.context.evaluated_depsgraph_get()          
         bm_temp.from_object(object=obj, depsgraph=depsgraph, deform=True)
         bm_temp.transform(obj.matrix_world)
@@ -180,13 +178,11 @@ class Geometry:
         #Nettoyage
         bpy.data.meshes.remove(mesh)
         
-        #REnable subsurf
-        
-
+        #REnable subsurf  
         for modifier in obj.modifiers:
             if modifier.type == "SUBSURF":
-                modifier.show_viewport = object_state[obj.name][modifier.name][0]
-                modifier.show_render = object_state[obj.name][modifier.name][1]
+                modifier.show_viewport = subsurfs[modifier.name][0]
+                modifier.show_render = subsurfs[modifier.name][1]
         
 
         self.vertices = vertices
