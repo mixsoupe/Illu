@@ -441,7 +441,7 @@ def build_shadow(shadow_objects, geo):
     except:
         pass
 
-    vertices = np.empty(shape=[0, D3], dtype = np.float32)    
+    vertices = np.empty(shape=[0, 3], dtype = np.float32)    
     indices = np.empty(shape=[0, 3], dtype = np.int32)
     
     for shadow_object in shadow_objects:
