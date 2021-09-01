@@ -21,6 +21,7 @@ from . shaders import *
 from . geometry import *
 
 def render(all = False):
+    T = time.time()
     rendered = []
     failed = []
 
@@ -76,6 +77,7 @@ def render(all = False):
         else:
             failed.append(material.name)
     
+    print ((time.time()- T)*1000)
     return rendered, failed
 
 
