@@ -289,8 +289,9 @@ class ILLU_OT_update_all(bpy.types.Operator):
     bl_label = "Update All"
     
     def execute(self, context):
+        T = time.time()
         rendered, failed = update(all = True)
-        
+        print ((time.time()- T)*1000)
         print (failed)
         if rendered:
             self.report({'INFO'}, '{} rendered'.format(rendered))
