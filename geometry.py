@@ -24,6 +24,7 @@ class Geometry:
         self.object = object        
         self.node = node
 
+        self.bake_to_uvs = None
         if node:
             self.node = node
             self.image_name = node.node_tree.nodes['Image'].image.name
@@ -41,11 +42,11 @@ class Geometry:
             self.noise_scale = get_socket_value(node, "Noise Scale")
             self.noise_diffusion = get_socket_value(node, "Noise Diffusion")
 
-        self.build_model([object,])
+        self.build_model(object)
 
 
 
-    def build_model(self, objects, get_uv = False):
+    def build_model(self, obj, get_uv = False):
         camera = bpy.context.scene.camera
 
         #Préparation du mesh 
@@ -53,23 +54,23 @@ class Geometry:
         bm = bmesh.new()
 
         object_state = {}
-        for o in objects: #Astuce pour fusionner plusieurs objets
-            bm_temp = bmesh.new()
-            subsurfs = {}
-            #Disable subsurf
-            for modifier in o.modifiers:
-                if modifier.type == "SUBSURF":
-                    subsurfs[modifier.name] = (modifier.show_viewport, modifier.show_render)
-                    modifier.show_viewport = False
-                    modifier.show_render = False
-            object_state[o.name] = subsurfs
-            depsgraph = bpy.context.evaluated_depsgraph_get()          
-            bm_temp.from_object(object=o, depsgraph=depsgraph, deform=True)
-            bm_temp.transform(o.matrix_world)
-            bm_temp.to_mesh(mesh)
-            bm_temp.free()
-            bm.from_mesh(mesh)
-            obj = o
+
+        bm_temp = bmesh.new()
+        subsurfs = {}
+
+        #Disable subsurf
+        for modifier in obj.modifiers:
+            if modifier.type == "SUBSURF":
+                subsurfs[modifier.name] = (modifier.show_viewport, modifier.show_render)
+                modifier.show_viewport = False
+                modifier.show_render = False
+        object_state[obj.name] = subsurfs
+        depsgraph = bpy.context.evaluated_depsgraph_get()          
+        bm_temp.from_object(object=obj, depsgraph=depsgraph, deform=True)
+        bm_temp.transform(obj.matrix_world)
+        bm_temp.to_mesh(mesh)
+        bm_temp.free()
+        bm.from_mesh(mesh)
 
         bmesh.ops.triangulate(bm, faces=bm.faces[:]) #SLOW
         
@@ -99,13 +100,12 @@ class Geometry:
         bm = bmesh.new()
 
         mesh_orco = bpy.data.meshes.new("temp_mesh_orco")
-        for o in objects: #Astuce pour fusionner plusieurs objets
-            bm_temp = bmesh.new()            
-            bm_temp.from_object(object=o, depsgraph=depsgraph, deform=False)
-            bm_temp.to_mesh(mesh_orco)
-            bm_temp.free()
-            bm.from_mesh(mesh_orco)
-            obj = o
+
+        bm_temp = bmesh.new()            
+        bm_temp.from_object(object=obj, depsgraph=depsgraph, deform=False)
+        bm_temp.to_mesh(mesh_orco)
+        bm_temp.free()
+        bm.from_mesh(mesh_orco)
         
         bmesh.ops.triangulate(bm, faces=bm.faces[:]) 
         
@@ -122,7 +122,7 @@ class Geometry:
             "co", np.reshape(orco, vlen_orco * 3))
 
         t = time.time()
-        if get_uv:
+        if self.bake_to_uvs:
             # uvs = coordonnée de chaque uv point
             # uv_indices = les index des uv point pour chaque loop
             # uv_vertices = l'indice du vertex correspondant à l'uv
@@ -182,17 +182,17 @@ class Geometry:
         
         #REnable subsurf
         
-        for o in objects:
-            for modifier in o.modifiers:
-                if modifier.type == "SUBSURF":
-                    modifier.show_viewport = object_state[o.name][modifier.name][0]
-                    modifier.show_render = object_state[o.name][modifier.name][1]
+
+        for modifier in obj.modifiers:
+            if modifier.type == "SUBSURF":
+                modifier.show_viewport = object_state[obj.name][modifier.name][0]
+                modifier.show_render = object_state[obj.name][modifier.name][1]
         
 
         self.vertices = vertices
         self.indices = indices
         self.colors = color_rgba
-        if get_uv:
+        if self.bake_to_uvs:
             self.uvs = uvs
             self.uv_indices = uv_indices
             self.loop_indices = loop_indices
