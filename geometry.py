@@ -44,8 +44,8 @@ class Geometry:
 
 
 
-    def build_model(self, obj): 
-
+    def build_model(self, obj):
+        
         #Disable subsurf
         subsurfs = {}
         for modifier in obj.modifiers:
@@ -53,10 +53,13 @@ class Geometry:
                 subsurfs[modifier.name] = (modifier.show_viewport, modifier.show_render)
                 modifier.show_viewport = False
                 modifier.show_render = False
-
-        #Préparation du mesh 
+        
+        #Préparation du mesh
+        
         mesh = bpy.data.meshes.new("temp_mesh")
+        
         bm = bmesh.new()
+        
         depsgraph = bpy.context.evaluated_depsgraph_get()          
         bm.from_object(object=obj, depsgraph=depsgraph, deform=True)
         bm.transform(obj.matrix_world)  
@@ -154,7 +157,8 @@ class Geometry:
                 uv_indices = np.asarray(uv_indices, dtype = np.int32)
                 loop_indices = np.asarray(loop_indices, dtype = np.int32) 
         
-        #REnable subsurf  
+        #REnable subsurf
+        
         for modifier in obj.modifiers:
             if modifier.type == "SUBSURF":
                 modifier.show_viewport = subsurfs[modifier.name][0]
@@ -162,11 +166,11 @@ class Geometry:
         
         #Nettoyage
         bpy.data.meshes.remove(mesh)
-
+        
         #Variables
         self.vertices = vertices
         self.indices = indices
-
+        
         if self.node:
             self.colors = color_rgba
             self.orco = orco
@@ -176,7 +180,7 @@ class Geometry:
                 self.uvs = uvs
                 self.uv_indices = uv_indices
                 self.loop_indices = loop_indices
-
+        
 
 
 

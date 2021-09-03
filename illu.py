@@ -52,8 +52,8 @@ def render(all = False):
     geo_objects = []
     already_done = {}
     shadow_objects = []
-    #Geo
-    
+
+    #Geo    
     for node in nodes:
         node.objects    
         geometry = Geometry(node.objects, node)
@@ -61,7 +61,7 @@ def render(all = False):
         already_done[node.objects] = geometry
 
     #Shadow
-    """   
+       
     for obj in bpy.context.scene.objects:
         if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:  
             if obj in already_done.keys():                
@@ -70,12 +70,10 @@ def render(all = False):
                 geometry = Geometry(obj)
             
             shadow_objects.append(geometry)
-    """
+    
     #Render nodes                    
     for geo_object in geo_objects:
         result = render_node(geo_object, shadow_objects)
-        del geo_object
-        #result = False
         if result:
             rendered.append(material.name)
         else:
@@ -87,7 +85,6 @@ def render(all = False):
 
 
 def render_node(geo, shadow_objects):
-    """
     dim_x, dim_y =  get_resolution()
     ratio = dim_x / dim_y
     
@@ -99,13 +96,13 @@ def render_node(geo, shadow_objects):
         dim_x = int(dim_y * ratio)
 
     #Create buffers    
-    #base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-    #depth_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-    #sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-    #erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-    #shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-    #line_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
-    #noise_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    depth_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    shadow_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    line_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    noise_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     
     #Creation du modele     
     depth_precision = geo.distance * geo.smoothness /10
@@ -192,15 +189,16 @@ def render_node(geo, shadow_objects):
 
 
     #Suppression des buffers
-    #shadow_buffer.free()               
-    #sdf_buffer.free()
-    #erosion_buffer.free()
+    shadow_buffer.free()               
+    sdf_buffer.free()
+    erosion_buffer.free()
     base_buffer.free()
-    #depth_buffer.free()
-    #line_buffer.free()
-    #noise_buffer.free()
+    depth_buffer.free()
+    line_buffer.free()
+    noise_buffer.free()
 
     #Enregistrement des images
     buffer_to_image( geo.image_name, buffer, dim_x, dim_y)
-    """
+
+    
     return True
