@@ -76,7 +76,7 @@ def render(all = False):
         else:
             failed.append(material.name)
     
-    print ((time.time()- T)*1000)
+    #print ((time.time()- T)*1000)
     return rendered, failed
 
 
@@ -102,19 +102,10 @@ def render_node(geo, shadow_objects):
     noise_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     
     #Creation du modele        
-    #vertices, indices, colors, uvs, uv_indices, loop_indices, orco, distance = build_model(obj, get_uv = True)
     depth_precision = geo.distance * geo.smoothness /10
 
     #Shadow Buffer
-    """
-    shadow_objs = get_shadow_objects(exclude = obj)
-    if len(shadow_objs) > 0:
-        vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs) 
-        bgl_shadow(shadow_buffer, dim_x, dim_y, vertices, indices, colors, vertices_shadow, indices_shadow, light, shadow_size, soft_shadow)         
-    """
     if shadow_objects:        
-        #shadow_objs = get_shadow_objects(exclude = geo.object.name)
-        #vertices_shadow, indices_shadow, shadow_colors = build_model(shadow_objs)
         vertices_shadow, indices_shadow = build_shadow(shadow_objects, geo)
         bgl_shadow(shadow_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors, vertices_shadow, indices_shadow, geo.light, geo.shadow_size, geo.soft_shadow)         
 
@@ -199,5 +190,3 @@ def render_node(geo, shadow_objects):
     buffer_to_image( geo.image_name, buffer, dim_x, dim_y)
 
     return True
-
-    #print ((time.time()-T)*1000)
