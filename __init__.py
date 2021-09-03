@@ -316,10 +316,16 @@ class ILLU_OT_update_selected(bpy.types.Operator):
         return {'FINISHED'}
 
 #FUNCTIONS
+
 @persistent
 def update_handler(dummy):
-    if bpy.context.scene.playback:     
+    if bpy.context.scene.playback:            
         render(all = True)
+        
+@persistent
+def render_handler(dummy):
+    render(all = True)
+
 
 #REGISTER UNREGISTER
 classes = (
@@ -346,7 +352,8 @@ def register():
         bpy.types.Scene.playback = bpy.props.BoolProperty(name="Update on Playback", default=False)
 
     bpy.app.handlers.frame_change_post.append(update_handler)
-
+    bpy.app.handlers.render_pre.append(render_handler)
+    
     register_node_categories("ILLU_NODES", shcat)
 
 def unregister():
@@ -358,7 +365,7 @@ def unregister():
     del bpy.types.Object.illu
     del bpy.types.Scene.playback
 
-
     bpy.app.handlers.frame_change_post.remove(update_handler)
+    bpy.app.handlers.render_pre.remove(render_handler)
 
     unregister_node_categories("ILLU_NODES")

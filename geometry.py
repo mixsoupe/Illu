@@ -42,8 +42,6 @@ class Geometry:
 
         self.build_model(self.object)
 
-
-
     def build_model(self, obj):
         
         #Disable subsurf
