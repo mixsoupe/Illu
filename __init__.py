@@ -318,7 +318,7 @@ class ILLU_OT_update_selected(bpy.types.Operator):
 #FUNCTIONS
 @persistent
 def update_handler(dummy):
-    if bpy.context.scene.playback:        
+    if bpy.context.scene.playback:     
         render(all = True)
 
 #REGISTER UNREGISTER
