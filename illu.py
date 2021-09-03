@@ -53,6 +53,7 @@ def render(all = False):
     already_done = {}
     shadow_objects = []
     #Geo
+    
     for node in nodes:
         node.objects    
         geometry = Geometry(node.objects, node)
@@ -60,7 +61,7 @@ def render(all = False):
         already_done[node.objects] = geometry
 
     #Shadow
-    """
+    """   
     for obj in bpy.context.scene.objects:
         if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:  
             if obj in already_done.keys():                
@@ -69,10 +70,11 @@ def render(all = False):
                 geometry = Geometry(obj)
             
             shadow_objects.append(geometry)
-    """       
-    #Render nodes                      
+    """
+    #Render nodes                    
     for geo_object in geo_objects:
         result = render_node(geo_object, shadow_objects)
+        del geo_object
         #result = False
         if result:
             rendered.append(material.name)
@@ -80,11 +82,12 @@ def render(all = False):
             failed.append(material.name)
     
     #print ((time.time()- T)*1000)
+    
     return rendered, failed
 
 
 def render_node(geo, shadow_objects):
-        
+    """
     dim_x, dim_y =  get_resolution()
     ratio = dim_x / dim_y
     
@@ -96,7 +99,7 @@ def render_node(geo, shadow_objects):
         dim_x = int(dim_y * ratio)
 
     #Create buffers    
-    base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    #base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     #depth_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     #sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     #erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
@@ -104,9 +107,9 @@ def render_node(geo, shadow_objects):
     #line_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     #noise_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     
-    #Creation du modele        
+    #Creation du modele     
     depth_precision = geo.distance * geo.smoothness /10
-    """
+    
     #Shadow Buffer
     if shadow_objects:        
         vertices_shadow, indices_shadow = build_shadow(shadow_objects, geo)
@@ -115,6 +118,7 @@ def render_node(geo, shadow_objects):
 
     #Base render
     bgl_base_render(base_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)
+    
     bgl_base_noise(noise_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors, geo.orco, geo.noise_scale/8)
     bgl_filter_sss(noise_buffer, depth_buffer, dim_x, dim_y, samples = 20, radius = 3)
     bgl_depth_render(depth_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)    
@@ -179,7 +183,7 @@ def render_node(geo, shadow_objects):
             buffer = bgl.Buffer(bgl.GL_FLOAT, dim_x * dim_y * 4)        
             bgl.glReadBuffer(bgl.GL_BACK)        
             bgl.glReadPixels(0, 0, dim_x, dim_y, bgl.GL_RGBA, bgl.GL_FLOAT, buffer)  
-    """
+    
     #DEBUG
     with base_buffer.bind():        
         buffer = bgl.Buffer(bgl.GL_FLOAT, dim_x * dim_y * 4)        
@@ -198,5 +202,5 @@ def render_node(geo, shadow_objects):
 
     #Enregistrement des images
     buffer_to_image( geo.image_name, buffer, dim_x, dim_y)
-
+    """
     return True
