@@ -104,7 +104,8 @@ class ILLU_PT_view3d_ui(bpy.types.Panel):
             is_geometry = (obj_type in {'MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'VOLUME', 'HAIR', 'POINTCLOUD'})
             if is_geometry: 
                 layout.prop(illu, "cast_shadow")
-        layout.prop(context.scene, "playback")
+        layout.prop(context.scene, "illu_playback")
+        layout.prop(context.scene, "illu_render")
         layout.operator("illu.update_all")
         layout.operator("illu.update_selected")
 
@@ -315,29 +316,17 @@ class ILLU_OT_update_selected(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class ILLU_OT_render_animation(bpy.types.Operator):
-    
-    bl_idname = "illu.render_animation"
-    bl_label = "Render Animation"
-    bl_description = "Render Animation"
-
-    def execute(self, context):
-        for step in range(1, 4):    
-            bpy.context.scene.frame_set(step)
-            bpy.data.scenes["Scene"].render.filepath = 'C:/Users/Enclume/Desktop/TEST/test_%d' % step
-            bpy.ops.render.render( write_still=True )
-        return {'FINISHED'}
-
 #FUNCTIONS
 
 @persistent
 def update_handler(dummy):
-    if bpy.context.scene.playback:            
+    if bpy.context.scene.illu_playback:            
         render(all = True)
         
 @persistent
 def render_handler(dummy):
-    render(all = True)
+    if bpy.context.scene.illu_render:    
+        render(all = True)
 
 
 #REGISTER UNREGISTER
@@ -349,7 +338,6 @@ classes = (
     ILLU_OT_update, 
     ILLU_OT_update_all,
     ILLU_OT_update_selected,
-    ILLU_OT_render_animation,
     ILLU_2DShade,
     )
 
@@ -362,8 +350,10 @@ def register():
   
     if not hasattr( bpy.types.Object, 'illu'):
         bpy.types.Object.illu = bpy.props.PointerProperty(type=ILLUObjectProperties, override={'LIBRARY_OVERRIDABLE'}) #FIX Simplifier, supprimer le group de propriété
-    if not hasattr( bpy.types.Scene, 'playback'):
-        bpy.types.Scene.playback = bpy.props.BoolProperty(name="Update on Playback", default=False)
+    if not hasattr( bpy.types.Scene, 'illu_playback'):
+        bpy.types.Scene.illu_playback = bpy.props.BoolProperty(name="Update on Playback", default=False)
+    if not hasattr( bpy.types.Scene, 'illu_render'):
+        bpy.types.Scene.illu_render = bpy.props.BoolProperty(name="Update on Render", default=True)
 
     bpy.app.handlers.frame_change_post.append(update_handler)
     bpy.app.handlers.render_pre.append(render_handler)
@@ -377,7 +367,8 @@ def unregister():
     for cls in reversed(classes):
         unregister_class(cls)
     del bpy.types.Object.illu
-    del bpy.types.Scene.playback
+    del bpy.types.Scene.illu_playback
+    del bpy.types.Scene.illu_render
 
     bpy.app.handlers.frame_change_post.remove(update_handler)
     bpy.app.handlers.render_pre.remove(render_handler)
