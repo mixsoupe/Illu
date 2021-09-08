@@ -74,7 +74,7 @@ def render(all = False):
     #Render nodes                    
     for geo_object in geo_objects:
         result = render_node(geo_object, shadow_objects)
-        print (geo_object)
+        print (geo_object.object.name)
         if result:
             rendered.append(material.name)
         else:

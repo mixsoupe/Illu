@@ -315,6 +315,19 @@ class ILLU_OT_update_selected(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class ILLU_OT_render_animation(bpy.types.Operator):
+    
+    bl_idname = "illu.render_animation"
+    bl_label = "Render Animation"
+    bl_description = "Render Animation"
+
+    def execute(self, context):
+        for step in range(1, 4):    
+            bpy.context.scene.frame_set(step)
+            bpy.data.scenes["Scene"].render.filepath = 'C:/Users/Enclume/Desktop/TEST/test_%d' % step
+            bpy.ops.render.render( write_still=True )
+        return {'FINISHED'}
+
 #FUNCTIONS
 
 @persistent
@@ -336,6 +349,7 @@ classes = (
     ILLU_OT_update, 
     ILLU_OT_update_all,
     ILLU_OT_update_selected,
+    ILLU_OT_render_animation,
     ILLU_2DShade,
     )
 
