@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 2, 2),
+    "version" : (1, 3, 1),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -104,7 +104,8 @@ class ILLU_PT_view3d_ui(bpy.types.Panel):
             is_geometry = (obj_type in {'MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'VOLUME', 'HAIR', 'POINTCLOUD'})
             if is_geometry: 
                 layout.prop(illu, "cast_shadow")
-        layout.prop(context.scene, "playback")
+        layout.prop(context.scene, "illu_playback")
+        layout.prop(context.scene, "illu_render")
         layout.operator("illu.update_all")
         layout.operator("illu.update_selected")
 
@@ -272,7 +273,7 @@ class ILLU_OT_update(bpy.types.Operator):
     def execute(self, context):        
         node = context.active_node
            
-        result = update_image(node)
+        result = render(node)
         material_name = context.material.name
 
         if result:            
@@ -289,9 +290,8 @@ class ILLU_OT_update_all(bpy.types.Operator):
     bl_label = "Update All"
     
     def execute(self, context):
-        T = time.time()
-        rendered, failed = update(all = True)
-        print ((time.time()- T)*1000)
+        rendered, failed = render(all = True)
+        
         print (failed)
         if rendered:
             self.report({'INFO'}, '{} rendered'.format(rendered))
@@ -306,7 +306,7 @@ class ILLU_OT_update_selected(bpy.types.Operator):
     bl_label = "Update Selected"
     
     def execute(self, context):
-        rendered, failed = update()
+        rendered, failed = render()
         
         print (failed)
         if rendered:
@@ -315,85 +315,19 @@ class ILLU_OT_update_selected(bpy.types.Operator):
             self.report({'WARNING'}, '{} render failed'.format(failed))  
 
         return {'FINISHED'}
-#TEST
-class Geometry:
-  x = 10
 
 #FUNCTIONS
-def update_image(node):
-    geometry = Geometry()
-    
-    obj = node.objects
-    if obj is not None:
-        image_name = node.node_tree.nodes['Image'].image.name
-        texture_size = int(node.texture_size)
-        shadow_size = int(node.shadow_size)
-        self_shading = node.self_shading
-        bake_to_uvs = node.bake_to_uvs
-        light = get_socket_value(node, "Light")
-        scale = get_socket_value(node, "Scale")
-        smoothness = get_socket_value(node, "Smoothness")
-        angle = get_socket_value(node, "Angle Compensation")
-        soft_shadow = get_socket_value(node, "Soft Shadow")
-        line_scale = get_socket_value(node, "Line Scale")
-        line_detection = get_socket_value(node, "Line Detection")    
-        noise_scale = get_socket_value(node, "Noise Scale")
-        noise_diffusion = get_socket_value(node, "Noise Diffusion") 
-        
-        generate_images(geometry,
-                        obj, 
-                        image_name, 
-                        light, 
-                        scale, 
-                        smoothness, 
-                        angle, 
-                        texture_size, 
-                        shadow_size, 
-                        soft_shadow, 
-                        self_shading, 
-                        bake_to_uvs,
-                        line_scale,
-                        line_detection,
-                        noise_scale, 
-                        noise_diffusion
-                        )
-        
-        return True
-
-def update(all = False):
-    rendered = []
-    failed = []
-    scene_materials = []    
-
-    if all:
-        objs = bpy.context.scene.objects
-    else:        
-        objs = bpy.context.selected_objects
-    
-    for obj in objs:
-        for slot in obj.material_slots:
-            material = slot.material
-            if material:
-                scene_materials.append(material)
-
-    for material in bpy.data.materials:
-        if material in scene_materials:
-            if material.node_tree is not None:
-                for node_tree in traverse_node_tree(material.node_tree):
-                    for node in node_tree.nodes:
-                        if node.bl_idname == 'ILLU_2DShade':              
-                            result = update_image(node)
-                            if result:
-                                rendered.append(material.name)
-                            else:
-                                failed.append(material.name)
-    
-    return rendered, failed
 
 @persistent
 def update_handler(dummy):
-    if bpy.context.scene.playback:        
-        update(all = True)
+    if bpy.context.scene.illu_playback:            
+        render(all = True)
+        
+@persistent
+def render_handler(dummy):
+    if bpy.context.scene.illu_render:    
+        render(all = True)
+
 
 #REGISTER UNREGISTER
 classes = (
@@ -416,11 +350,14 @@ def register():
   
     if not hasattr( bpy.types.Object, 'illu'):
         bpy.types.Object.illu = bpy.props.PointerProperty(type=ILLUObjectProperties, override={'LIBRARY_OVERRIDABLE'}) #FIX Simplifier, supprimer le group de propriété
-    if not hasattr( bpy.types.Scene, 'playback'):
-        bpy.types.Scene.playback = bpy.props.BoolProperty(name="Update on Playback", default=False)
+    if not hasattr( bpy.types.Scene, 'illu_playback'):
+        bpy.types.Scene.illu_playback = bpy.props.BoolProperty(name="Update on Playback", default=False)
+    if not hasattr( bpy.types.Scene, 'illu_render'):
+        bpy.types.Scene.illu_render = bpy.props.BoolProperty(name="Update on Render", default=True)
 
     bpy.app.handlers.frame_change_post.append(update_handler)
-
+    bpy.app.handlers.render_pre.append(render_handler)
+    
     register_node_categories("ILLU_NODES", shcat)
 
 def unregister():
@@ -430,9 +367,10 @@ def unregister():
     for cls in reversed(classes):
         unregister_class(cls)
     del bpy.types.Object.illu
-    del bpy.types.Scene.playback
-
+    del bpy.types.Scene.illu_playback
+    del bpy.types.Scene.illu_render
 
     bpy.app.handlers.frame_change_post.remove(update_handler)
+    bpy.app.handlers.render_pre.remove(render_handler)
 
     unregister_node_categories("ILLU_NODES")
