@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 3, 1),
+    "version" : (1, 3, 2),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -273,15 +273,14 @@ class ILLU_OT_update(bpy.types.Operator):
     def execute(self, context):        
         node = context.active_node
            
-        result = render(node)
+        rendered, failed =  render(all = False, node = node)
         material_name = context.material.name
 
-        if result:            
-            self.report({'INFO'}, '{} rendered'.format(material_name))    
-            return {'FINISHED'}
-        else:
-            self.report({"WARNING"}, 'Render failed, missing properties')
-            return {'CANCELLED'}
+        if rendered:            
+            self.report({'INFO'}, '{} rendered'.format(rendered))
+        if failed:
+            self.report({'WARNING'}, '{} render failed'.format(failed))  
+        return {'FINISHED'}
 
 
 class ILLU_OT_update_all(bpy.types.Operator):
@@ -292,7 +291,6 @@ class ILLU_OT_update_all(bpy.types.Operator):
     def execute(self, context):
         rendered, failed = render(all = True)
         
-        print (failed)
         if rendered:
             self.report({'INFO'}, '{} rendered'.format(rendered))
         if failed:
@@ -306,7 +304,7 @@ class ILLU_OT_update_selected(bpy.types.Operator):
     bl_label = "Update Selected"
     
     def execute(self, context):
-        rendered, failed = render()
+        rendered, failed = render(all = False)
         
         print (failed)
         if rendered:

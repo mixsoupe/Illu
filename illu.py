@@ -20,33 +20,36 @@ from . utils import *
 from . shaders import *
 from . geometry import *
 
-def render(all = False):
+def render(all = False, node = None):
     T = time.time()
     rendered = []
     failed = []
 
     #Get 2d_shade nodes
-    nodes = []
-    scene_materials = []     
-    if all:
-        objs = bpy.context.scene.objects
-    else:        
-        objs = bpy.context.selected_objects
-    
-    for obj in objs:
-        for slot in obj.material_slots:
-            material = slot.material
-            if material:
-                scene_materials.append(material)
+    if node:
+        nodes = [node,]
+    else :
+        nodes = []
+        scene_materials = []     
+        if all:
+            objs = bpy.context.scene.objects
+        else:        
+            objs = bpy.context.selected_objects
+        
+        for obj in objs:        
+            for slot in obj.material_slots:
+                material = slot.material
+                if material:
+                    scene_materials.append(material)
 
-    for material in bpy.data.materials:
-        if material in scene_materials:
-            if material.node_tree is not None:
-                for node_tree in traverse_node_tree(material.node_tree):
-                    for node in node_tree.nodes:
-                        if node.bl_idname == 'ILLU_2DShade':
-                            if node.objects is not None:
-                                nodes.append (node)
+        for material in bpy.data.materials:
+            if material in scene_materials:
+                if material.node_tree is not None:
+                    for node_tree in traverse_node_tree(material.node_tree):
+                        for node in node_tree.nodes:
+                            if node.bl_idname == 'ILLU_2DShade':
+                                if node.objects is not None:
+                                    nodes.append (node)
 
     #Build scene geometry
     geo_objects = []
@@ -54,8 +57,7 @@ def render(all = False):
     shadow_objects = []
 
     #Geo
-    for node in nodes:
-        node.objects
+    for node in nodes:        
         geometry = Geometry(node.objects, node)
         geo_objects.append(geometry)
         already_done[node.objects] = geometry
@@ -74,11 +76,10 @@ def render(all = False):
     #Render nodes                    
     for geo_object in geo_objects:
         result = render_node(geo_object, shadow_objects)
-        print (geo_object.object.name)
         if result:
-            rendered.append(material.name)
+            rendered.append(geo_object.object.name)
         else:
-            failed.append(material.name)
+            failed.append(geo_object.object.name)
     
     #print ((time.time()- T)*1000)
    
