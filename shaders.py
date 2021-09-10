@@ -463,7 +463,7 @@ def bgl_filter_line(offscreen_A, depth_buffer, dim_x, dim_y, line_detection, bor
     offscreen_B.free()
 
 
-def bgl_filter_expand(offscreen_A, dim_x, dim_y, value):
+def bgl_filter_expand(offscreen_A, dim_x, dim_y, value, channel = (1, 1, 1)):
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "expand.frag")                        
@@ -487,6 +487,7 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y, value):
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_float("step", step)
                 shader.uniform_int("expand", expand)
+                shader.uniform_float("channel", channel)
                 batch.draw(shader)
 
         step = (0, 1/dim_y)
@@ -497,6 +498,7 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y, value):
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_float("step", step)
                 shader.uniform_int("expand", expand)
+                shader.uniform_float("channel", channel)
                 batch.draw(shader)
    
     offscreen_B.free()

@@ -124,8 +124,8 @@ def render_node(geo, shadow_objects):
     bgl_depth_render(depth_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)    
 
     if geo.self_shading:
-        bgl_filter_expand(base_buffer, dim_x, dim_y, 3)    
-    #bgl_filter_sss(base_buffer, depth_buffer, samples = 20, radius = 10, channel = (1,0,0,0))    
+        bgl_filter_expand(base_buffer, dim_x, dim_y, 3, channel = (1,1,1))    
+    #bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 20, radius = 10, channel = (1,0,0,0))    
     
     #Distance field buffer (transparence)    
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)        
@@ -165,7 +165,8 @@ def render_node(geo, shadow_objects):
     
     #Bake    
     if geo.bake_to_uvs:
-        bake_buffer = gpu.types.GPUOffScreen(geo.texture_size, geo.texture_size)           
+        bake_buffer = gpu.types.GPUOffScreen(geo.texture_size, geo.texture_size)
+        #bgl_filter_expand(base_buffer, dim_x, dim_y, 3, channel = (1,0,0))             
         bake_to_texture(base_buffer, bake_buffer, dim_x, dim_y, geo.vertices, geo.uvs, geo.uv_indices, geo.loop_indices)
         bgl_filter_expand(bake_buffer, geo.texture_size, geo.texture_size, 3)            
         #Lecture du buffer 
