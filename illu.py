@@ -123,11 +123,13 @@ def render_node(geo, shadow_objects):
     bgl_filter_sss(noise_buffer, depth_buffer, dim_x, dim_y, samples = 20, radius = 3)
     bgl_depth_render(depth_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)    
 
-    if geo.self_shading:
-        bgl_filter_expand(base_buffer, dim_x, dim_y, 3, channel = (0,0,0,0))    
+ 
+
     
     #Distance field buffer (transparence)    
-    copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)        
+    copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)    
+    if geo.self_shading:
+        bgl_filter_expand(sdf_buffer, dim_x, dim_y, 3, channel = (0,1,0,1))
     bgl_filter_distance_field(sdf_buffer, dim_x, dim_y, geo.scale)    
     bgl_filter_sss(sdf_buffer, depth_buffer, dim_x, dim_y, samples = 20, radius = 20, depth_precision = depth_precision)
     merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
@@ -150,9 +152,12 @@ def render_node(geo, shadow_objects):
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
       
-    #Noise    
+    #Noise
+       
     border= geo.noise_diffusion*20    
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
+    if geo.self_shading:
+        bgl_filter_expand(erosion_buffer, dim_x, dim_y, 3, channel = (0,0,1,1))
     bgl_filter_noise(erosion_buffer, noise_buffer, dim_x, dim_y, geo.noise_diffusion/30)
     bgl_filter_expand(erosion_buffer, dim_x, dim_y, -border)  
     bgl_filter_sss(erosion_buffer, depth_buffer, dim_x, dim_y, samples = 30, radius = max(geo.noise_diffusion*100, 7), channel = (0,0,0,1))
@@ -162,10 +167,14 @@ def render_node(geo, shadow_objects):
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
     
+    
+
     #Bake    
     if geo.bake_to_uvs:
         bake_buffer = gpu.types.GPUOffScreen(geo.texture_size, geo.texture_size)
-        bgl_filter_expand(base_buffer, dim_x, dim_y, 3, channel = (1,0,0,1))             
+        
+        bgl_filter_expand(base_buffer, dim_x, dim_y, 20, channel = (1,1,1,1)) 
+
         bake_to_texture(base_buffer, bake_buffer, dim_x, dim_y, geo.vertices, geo.uvs, geo.uv_indices, geo.loop_indices)
         bgl_filter_expand(bake_buffer, geo.texture_size, geo.texture_size, 3)            
         #Lecture du buffer 
