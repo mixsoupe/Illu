@@ -121,9 +121,7 @@ def render_node(geo, shadow_objects):
     
     bgl_base_noise(noise_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors, geo.orco, geo.noise_scale/8)
     bgl_filter_sss(noise_buffer, depth_buffer, dim_x, dim_y, samples = 20, radius = 3)
-    bgl_depth_render(depth_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)    
-
- 
+    bgl_depth_render(depth_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)  
 
     
     #Distance field buffer (transparence)    
@@ -144,16 +142,14 @@ def render_node(geo, shadow_objects):
     bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 10, radius = geo.line_scale, depth_precision = depth_precision, channel = (0,0,1,0))
     bgl_filter_custom(base_buffer, dim_x, dim_y, "line_filter", geo.line_scale)
     
-    #Merge Shadow
-          
+    #Merge Shadow          
     if shadow_objects:
         if geo.self_shading:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow", dim_x, dim_y)
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
       
-    #Noise
-       
+    #Border     
     border= geo.noise_diffusion*20    
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
     if geo.self_shading:
@@ -176,7 +172,8 @@ def render_node(geo, shadow_objects):
         bgl_filter_expand(base_buffer, dim_x, dim_y, 20, channel = (1,1,1,1)) 
 
         bake_to_texture(base_buffer, bake_buffer, dim_x, dim_y, geo.vertices, geo.uvs, geo.uv_indices, geo.loop_indices)
-        bgl_filter_expand(bake_buffer, geo.texture_size, geo.texture_size, 3)            
+        bgl_filter_expand(bake_buffer, geo.texture_size, geo.texture_size, 10)  
+
         #Lecture du buffer 
         with bake_buffer.bind():        
             buffer = bgl.Buffer(bgl.GL_FLOAT, geo.texture_size * geo.texture_size * 4)        

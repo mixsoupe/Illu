@@ -13,6 +13,6 @@ void main()
 
     float debug = color0.a - color1.a;
 
-    gl_FragColor = vec4(color0.r, color1.g, mergeB, color0.a);
+    gl_FragColor = vec4(color0.r, color0.g, mergeB, color0.a);
     //gl_FragColor = vec4(color0.r, color0.g, merge, color0.a); //Le noise est désactivé dans le shading et dans le distance field
 }
