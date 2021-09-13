@@ -129,7 +129,7 @@ def render_node(geo, shadow_objects):
     #Distance field buffer (transparence)    
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)    
     if geo.self_shading:
-        bgl_filter_expand(sdf_buffer, dim_x, dim_y, 3, channel = (0,1,0,1))
+        bgl_filter_expand(sdf_buffer, dim_x, dim_y, 3, channel = (1,1,1,1))
     bgl_filter_distance_field(sdf_buffer, dim_x, dim_y, geo.scale)    
     bgl_filter_sss(sdf_buffer, depth_buffer, dim_x, dim_y, samples = 20, radius = 20, depth_precision = depth_precision)
     merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
