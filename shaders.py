@@ -463,8 +463,12 @@ def bgl_filter_line(offscreen_A, depth_buffer, dim_x, dim_y, line_detection, bor
     offscreen_B.free()
 
 
-def bgl_filter_expand(offscreen_A, dim_x, dim_y, value, channel = (1, 1, 1)):
+def bgl_filter_expand(offscreen_A, dim_x, dim_y, value, channel = (1, 1, 1, 1)):
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
+    offscreen_C = gpu.types.GPUOffScreen(dim_x, dim_y)
+    
+    copy_buffer(offscreen_A, offscreen_B, dim_x, dim_y)  
+    
             
     shader = compile_shader("image2d.vert", "expand.frag")                        
     batch = batch2d(shader, dim_x, dim_y)
@@ -480,28 +484,29 @@ def bgl_filter_expand(offscreen_A, dim_x, dim_y, value, channel = (1, 1, 1)):
     iteration = int(abs(value))
     for i in range (iteration):
         step = (1/dim_x, 0)
-        with offscreen_B.bind():                   
-                bgl.glActiveTexture(bgl.GL_TEXTURE0)            
-                bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)            
-                shader.bind()
-                shader.uniform_int("Sampler", 0)
-                shader.uniform_float("step", step)
-                shader.uniform_int("expand", expand)
-                shader.uniform_float("channel", channel)
-                batch.draw(shader)
-
-        step = (0, 1/dim_y)
-        with offscreen_A.bind():                   
+        with offscreen_C.bind():                   
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)            
                 bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)            
                 shader.bind()
                 shader.uniform_int("Sampler", 0)
                 shader.uniform_float("step", step)
                 shader.uniform_int("expand", expand)
-                shader.uniform_float("channel", channel)
                 batch.draw(shader)
-   
+
+        step = (0, 1/dim_y)
+        with offscreen_B.bind():                   
+                bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+                bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_C.color_texture)            
+                shader.bind()
+                shader.uniform_int("Sampler", 0)
+                shader.uniform_float("step", step)
+                shader.uniform_int("expand", expand)
+                batch.draw(shader) 
+
+    merge_channels(offscreen_A, offscreen_B, channel, dim_x, dim_y)
+    
     offscreen_B.free()
+    offscreen_C.free()
 
 
 def bake_to_texture(offscreen_A, offscreen_B, dim_x, dim_y, vertices, uvs, uv_indices, loop_indices):

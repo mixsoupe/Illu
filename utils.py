@@ -517,6 +517,31 @@ def merge_buffers(offscreen_A, offscreen_B, operation, dim_x, dim_y):
     offscreen_C.free()
 
 
+def merge_channels(offscreen_A, offscreen_B, channel, dim_x, dim_y):
+    #dim_x, dim_y =  get_resolution()
+    offscreen_C = gpu.types.GPUOffScreen(dim_x, dim_y)
+            
+    shader = compile_shader("image2d.vert", "merge_channels.frag")                        
+    batch = batch2d(shader,dim_x, dim_y)
+
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_projection_matrix(projection_matrix_2d(dim_x, dim_y))
+    
+    with offscreen_C.bind():                   
+            bgl.glActiveTexture(bgl.GL_TEXTURE0)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_A.color_texture)
+            bgl.glActiveTexture(bgl.GL_TEXTURE1)            
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)              
+            shader.bind()
+            shader.uniform_int("Sampler0", 0)
+            shader.uniform_int("Sampler1", 1)   
+            shader.uniform_float("channel", channel)           
+            batch.draw(shader)
+
+    copy_buffer(offscreen_C, offscreen_A, dim_x, dim_y)
+    offscreen_C.free()
+
+
 def soft_shadow_pattern(spread):
     vectors = (
         (0.1382, -0.4253, -0.2236), (-0.3618, -0.2629, -0.2236),
