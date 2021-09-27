@@ -702,5 +702,6 @@ def get_socket_value(this_node, input, default = 1):
                                             group = node
                                             value = group.inputs[input_name].default_value
                                             return value
+
                 
 

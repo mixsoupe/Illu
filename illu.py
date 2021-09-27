@@ -55,7 +55,6 @@ def render(all = False, node = None):
     geo_objects = []
     already_done = {}
     shadow_objects = []
-
     #Geo
     for node in nodes:        
         geometry = Geometry(node.objects, node)

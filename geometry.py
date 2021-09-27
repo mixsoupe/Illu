@@ -25,6 +25,9 @@ class Geometry:
         self.node = node
 
         if self.node:
+            if not node.node_tree.nodes['Image'].image:
+                image = bpy.data.images.new(node.node_tree.name, 2048, 2048) #FIX RESOLUTION
+                node.node_tree.nodes['Image'].image = image
             self.image_name = node.node_tree.nodes['Image'].image.name
             self.texture_size = int(node.texture_size)
             self.shadow_size = int(node.shadow_size)

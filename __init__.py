@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 3, 3),
+    "version" : (1, 3, 4),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -73,7 +73,7 @@ class ILLU_Preferences(bpy.types.AddonPreferences):
         addon_updater_ops.update_settings_ui(self,context)
 
 #PROPS
-class ILLUObjectProperties(bpy.types.PropertyGroup):
+class ILLU_Object_Properties(bpy.types.PropertyGroup):
     cast_shadow: bpy.props.BoolProperty(
         name="Cast Shadow",
         default = False,
@@ -330,7 +330,7 @@ def render_handler(dummy):
 #REGISTER UNREGISTER
 classes = (
     ILLU_Preferences,
-    ILLUObjectProperties,
+    ILLU_Object_Properties,
     ILLU_PT_view3d_ui,
     ILLU_PT_object_ui,
     ILLU_OT_update, 
@@ -347,7 +347,7 @@ def register():
         register_class(cls)
   
     if not hasattr( bpy.types.Object, 'illu'):
-        bpy.types.Object.illu = bpy.props.PointerProperty(type=ILLUObjectProperties, override={'LIBRARY_OVERRIDABLE'}) #FIX Simplifier, supprimer le group de propriété
+        bpy.types.Object.illu = bpy.props.PointerProperty(type=ILLU_Object_Properties, override={'LIBRARY_OVERRIDABLE'}) #FIX Simplifier, supprimer le group de propriété
     if not hasattr( bpy.types.Scene, 'illu_playback'):
         bpy.types.Scene.illu_playback = bpy.props.BoolProperty(name="Update on Playback", default=False)
     if not hasattr( bpy.types.Scene, 'illu_render'):
