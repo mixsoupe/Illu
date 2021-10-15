@@ -435,11 +435,9 @@ def get_shadow_objects(exclude):
                 
     return shadow_objs
 
-def build_shadow(shadow_objects, geo):
-    try:
-        shadow_objects.remove(geo)
-    except:
-        pass
+def build_shadow(shadows, geo):
+    
+    shadow_objects = [s for s in shadows if s != geo]
 
     vertices = np.empty(shape=[0, 3], dtype = np.float32)    
     indices = np.empty(shape=[0, 3], dtype = np.int32)

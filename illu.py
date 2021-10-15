@@ -67,14 +67,16 @@ def render(all = False, node = None):
         if obj.illu.cast_shadow and obj.type == 'MESH' and obj.hide_render is False:  
             if obj in already_done.keys():                
                 geometry = already_done[obj]
+                
             else :            
                 geometry = Geometry(obj)
-            
+                
             shadow_objects.append(geometry)
-    
+
     #Render nodes                    
     for geo_object in geo_objects:
         result = render_node(geo_object, shadow_objects)
+        
         if result:
             rendered.append(geo_object.object.name)
         else:
@@ -110,7 +112,7 @@ def render_node(geo, shadow_objects):
     depth_precision = geo.distance * geo.smoothness /10
     
     #Shadow Buffer
-    if shadow_objects:        
+    if shadow_objects:
         vertices_shadow, indices_shadow = build_shadow(shadow_objects, geo)
         bgl_shadow(shadow_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors, vertices_shadow, indices_shadow, geo.light, geo.shadow_size, geo.soft_shadow)         
 
