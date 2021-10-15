@@ -120,8 +120,8 @@ def render_node(geo, shadow_objects):
     #Base render
     bgl_base_render(base_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)
     
-    bgl_base_noise(noise_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors, geo.orco, geo.noise_scale/8)
-    bgl_filter_sss(noise_buffer, depth_buffer, dim_x, dim_y, samples = 20, radius = 3)
+    #bgl_base_noise(noise_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors, geo.orco, geo.noise_scale/8)
+    #bgl_filter_sss(noise_buffer, depth_buffer, dim_x, dim_y, samples = 20, radius = 3)
     bgl_depth_render(depth_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)  
 
     
@@ -140,8 +140,9 @@ def render_node(geo, shadow_objects):
     
     #Ajouter le trait
     bgl_filter_line(base_buffer, depth_buffer, dim_x, dim_y, geo.line_detection, False, depth_precision)
-    bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 10, radius = geo.line_scale, depth_precision = depth_precision, channel = (0,0,1,0))
-    bgl_filter_custom(base_buffer, dim_x, dim_y, "line_filter", geo.line_scale)
+    bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 10, radius = geo.line_scale/2, depth_precision = depth_precision, channel = (0,0,1,0))
+    bgl_filter_custom(base_buffer, dim_x, dim_y, "line_filter", geo.line_scale*2)
+
     
     #Merge Shadow          
     if shadow_objects:
@@ -153,9 +154,10 @@ def render_node(geo, shadow_objects):
     #Border     
     border= geo.noise_diffusion*20    
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
+    
     if geo.self_shading:
         bgl_filter_expand(erosion_buffer, dim_x, dim_y, 3, channel = (0,0,1,1))
-    bgl_filter_noise(erosion_buffer, noise_buffer, dim_x, dim_y, geo.noise_diffusion/30)
+    #bgl_filter_noise(erosion_buffer, noise_buffer, dim_x, dim_y, geo.noise_diffusion/30)
     bgl_filter_expand(erosion_buffer, dim_x, dim_y, -border)  
     bgl_filter_sss(erosion_buffer, depth_buffer, dim_x, dim_y, samples = 30, radius = max(geo.noise_diffusion*100, 7), channel = (0,0,0,1))
     
