@@ -160,6 +160,7 @@ def render_node(geo, shadow_objects):
     #bgl_filter_noise(erosion_buffer, noise_buffer, dim_x, dim_y, geo.noise_diffusion/30)
     bgl_filter_expand(erosion_buffer, dim_x, dim_y, -border)  
     bgl_filter_sss(erosion_buffer, depth_buffer, dim_x, dim_y, samples = 30, radius = max(geo.noise_diffusion*100, 7), channel = (0,0,0,1))
+    #ANTIALIASING bgl_filter_sss(erosion_buffer, depth_buffer, dim_x, dim_y, samples = 5, radius = 1, channel = (1,1,1,1))
     
     if geo.self_shading:   
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)

@@ -38,8 +38,8 @@ void main()
         for (int j=0; j<3; j++) {
             vec4 sample  = texelFetch(Depth_buffer, ivec2(gl_FragCoord) + ivec2(i-1,j-1), 0 ).rgba;          
             float sample_depth = convert32(sample.rgb);
-            
-            if (sample.a == 0.0){
+            float delta_z = (sample_depth - center_depth)*line_detection;
+            if (sample.a == 0){
                 if (border == 0){
                     I[i][j] = center_depth;
                 }
@@ -47,11 +47,11 @@ void main()
                     I[i][j] = sample_depth;
                 }
             }
-            else if (sample_depth < center_depth){
-                I[i][j] = center_depth;
+            else if (delta_z > 0.00004){ //0.00004
+                I[i][j] = sample_depth;
             }            
             else {
-                I[i][j] = sample_depth;
+                I[i][j] = center_depth;
             } 
         }    
     }

@@ -8,8 +8,11 @@ void main()
     vec4 color1 = texture(Sampler1, vTexCoord);
 
     //float mergeB = ((color0.b + color1.b)/2 + color0.a)/2;
-    //merge = (color0.b + color1.a)/2;
-    float mergeB = (color1.b + color1.a)/2;
+    float line = color1.b;
+    if (color1.a < 0.99) {
+        line = 0;
+    }
+    float mergeB = (line + color1.a)/2;
 
 
     gl_FragColor = vec4(color0.r, color0.g, mergeB, color0.a);
