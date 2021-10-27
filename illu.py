@@ -142,6 +142,7 @@ def render_node(geo, shadow_objects):
     bgl_filter_line(base_buffer, depth_buffer, dim_x, dim_y, geo.line_detection, False, depth_precision)
     bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 10, radius = geo.line_scale/2, depth_precision = depth_precision, channel = (0,0,1,0))
     bgl_filter_custom(base_buffer, dim_x, dim_y, "line_filter", geo.line_scale*2)
+    #bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 2, radius = 1, channel = (0,0,1,1))
 
     
     #Merge Shadow          
@@ -160,14 +161,14 @@ def render_node(geo, shadow_objects):
     #bgl_filter_noise(erosion_buffer, noise_buffer, dim_x, dim_y, geo.noise_diffusion/30)
     bgl_filter_expand(erosion_buffer, dim_x, dim_y, -border)  
     bgl_filter_sss(erosion_buffer, depth_buffer, dim_x, dim_y, samples = 30, radius = max(geo.noise_diffusion*100, 7), channel = (0,0,0,1))
-    #ANTIALIASING bgl_filter_sss(erosion_buffer, depth_buffer, dim_x, dim_y, samples = 5, radius = 1, channel = (1,1,1,1))
-    
+
     if geo.self_shading:   
         merge_buffers(base_buffer, erosion_buffer, "merge_noise", dim_x, dim_y)
     else:
         merge_buffers(base_buffer, erosion_buffer, "merge_noise_simple", dim_x, dim_y)
     
-    
+    #Antialiasing
+    bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 10, radius = 2, channel = (1,1,0,0))
 
     #Bake    
     if geo.bake_to_uvs:
