@@ -12,7 +12,7 @@ void main()
     if (color1.a < 0.99) {
         line = 0;
     }
-    float mergeB = (line + color1.a)/2;
+    float mergeB = (color1.b*color1.a + color1.a)/2;
 
 
     gl_FragColor = vec4(color0.r, color0.g, mergeB, color0.a);
