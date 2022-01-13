@@ -56,7 +56,7 @@ def render(all = False, node = None):
     already_done = {}
     shadow_objects = []
     #Geo
-    for node in nodes:        
+    for node in nodes:   
         geometry = Geometry(node.objects, node)
         geo_objects.append(geometry)
         already_done[node.objects] = geometry
@@ -75,6 +75,7 @@ def render(all = False, node = None):
 
     #Render nodes                    
     for geo_object in geo_objects:
+        print (geo_object.object.name)
         result = render_node(geo_object, shadow_objects)
         
         if result:
