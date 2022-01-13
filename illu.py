@@ -122,7 +122,8 @@ def render_node(geo, shadow_objects):
     bgl_base_render(base_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)    
     bgl_depth_render(depth_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)  
     
-    #Distance field buffer (transparence)    
+    #Distance field buffer (transparence)
+    
     copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)    
     if geo.self_shading:
         bgl_filter_expand(sdf_buffer, dim_x, dim_y, 3, channel = (1,1,1,1))
@@ -141,7 +142,7 @@ def render_node(geo, shadow_objects):
     bgl_filter_custom(base_buffer, dim_x, dim_y, "line_filter", geo.line_scale*2)
     #Antialiasing trait
     bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 5, radius = geo.scale, channel = (0,0,1,0))
-
+    
     
     #Merge Shadow          
     if shadow_objects:
@@ -150,7 +151,7 @@ def render_node(geo, shadow_objects):
         else:
             merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
       
-    #Border     
+    #Border    
     border= geo.noise_diffusion*20    
     copy_buffer(base_buffer, erosion_buffer, dim_x, dim_y)
     

@@ -33,7 +33,7 @@ void main()
 
     for (int i = 1; i < iteration; i++) {        
         float rand = (random(vTexCoord) * 2 - 1) / 2;
-        float rand_angle = angle + (rand*1.0);
+        float rand_angle = angle + (rand*0);
                 
         vec2 direction = vec2(cos(rand_angle)/dim_x, sin(rand_angle)/dim_y);
         
