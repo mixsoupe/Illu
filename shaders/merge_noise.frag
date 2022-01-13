@@ -10,8 +10,8 @@ void main()
 
     float mergeB = (color1.b * 1.2 * color1.a + color1.a)/2;
 
-    mergeB *= 0.0000001; //debug
-    mergeB += color1.b; //debug
+    //mergeB *= 0.0000001; //debug
+    //mergeB += color1.b; //debug
 
 
     gl_FragColor = vec4(color0.r, color0.g, mergeB, color0.a);
