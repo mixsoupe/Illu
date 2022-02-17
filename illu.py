@@ -147,9 +147,9 @@ def render_node(geo, shadow_objects):
     #Merge Shadow          
     if shadow_objects:
         if geo.self_shading:
-            merge_buffers(base_buffer, shadow_buffer, "merge_shadow", dim_x, dim_y)
+            merge_buffers(base_buffer, shadow_buffer, "merge_shadow", dim_x, dim_y, variable = geo.shadows)
         else:
-            merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y)
+            merge_buffers(base_buffer, shadow_buffer, "merge_shadow_simple", dim_x, dim_y, variable = geo.shadows)
       
     #Border    
     border= geo.noise_diffusion*20    

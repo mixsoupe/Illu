@@ -175,10 +175,10 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
         default = False
         )
 
-    shadow: bpy.props.FloatProperty(
-        name="Shadow",
-        default = 1.0
-        )
+    # shadow: bpy.props.FloatProperty(
+    #     name="Shadow",
+    #     default = 1.0
+    #     )
 
     def _new_node_tree(self):
         nt_name= '.' + self.bl_name + '_nodetree'
@@ -195,8 +195,9 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
                     ('NodeSocketFloat', {'name':'Scale','default_value':1.0, 'min_value':0, 'max_value':10}),
                     ('NodeSocketFloat', {'name':'Smoothness','default_value':0.1, 'min_value':0, 'max_value':1}),
                     ('NodeSocketFloat', {'name':'Angle Compensation', 'default_value':0.0, 'min_value':-180, 'max_value':180}),
+                    ('NodeSocketFloat', {'name':'Shadows', 'default_value':1.0, 'min_value':0.0, 'max_value':1.0}),
                     ('NodeSocketFloat', {'name':'Soft Shadow', 'default_value':1.0, 'min_value':0, 'max_value':20}),                    
-                    ('NodeSocketFloat', {'name':'Noise Scale', 'default_value':2000, 'min_value':0, 'max_value':10000}),
+                    #('NodeSocketFloat', {'name':'Noise Scale', 'default_value':2000, 'min_value':0, 'max_value':10000}),
                     ('NodeSocketFloat', {'name':'Noise Diffusion', 'default_value':0.1, 'min_value':0, 'max_value':2}),
                     ('NodeSocketFloat', {'name':'Line Scale', 'default_value':1.0, 'min_value':0, 'max_value':100}),
                     ('NodeSocketFloat', {'name':'Line Detection', 'default_value':1.0, 'min_value':0, 'max_value':10}),
@@ -241,7 +242,6 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
         layout.prop(self, 'shadow_size')
         layout.prop(self, 'self_shading')
         layout.prop(self, 'bake_to_uvs')
-        layout.prop(self, 'shadow')
         layout.operator("illu.update")        
 
     def init(self, context):

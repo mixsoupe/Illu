@@ -39,9 +39,9 @@ class Geometry:
             self.angle = get_socket_value(node, "Angle Compensation")
             self.soft_shadow = get_socket_value(node, "Soft Shadow")
             self.line_scale = get_socket_value(node, "Line Scale") * 2
-            self.line_detection = get_socket_value(node, "Line Detection")    
-            self.noise_scale = get_socket_value(node, "Noise Scale")
+            self.line_detection = get_socket_value(node, "Line Detection")
             self.noise_diffusion = get_socket_value(node, "Noise Diffusion")
+            self.shadows = get_socket_value(node, "Shadows")
 
         self.build_model(self.object)
 

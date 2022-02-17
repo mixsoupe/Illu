@@ -1,6 +1,7 @@
 in vec2 vTexCoord;
 uniform sampler2D Sampler0;
 uniform sampler2D Sampler1;
+uniform float Variable;
 
 void main()    
 {  
@@ -9,7 +10,7 @@ void main()
 
     float r = color0.r * color1.r;
     if (color0.a < 1.0){
-        r = 1.0;
+        r = 1.0 + Variable;
     }
 
     gl_FragColor = vec4(r, color0.g, color0.b, color0.a);

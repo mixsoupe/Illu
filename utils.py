@@ -491,7 +491,7 @@ def copy_buffer(source, target, dim_x, dim_y):
             shader.uniform_int("Sampler", 0)
             batch.draw(shader)
 
-def merge_buffers(offscreen_A, offscreen_B, operation, dim_x, dim_y):
+def merge_buffers(offscreen_A, offscreen_B, operation, dim_x, dim_y, variable = 0):
     #dim_x, dim_y =  get_resolution()
     offscreen_C = gpu.types.GPUOffScreen(dim_x, dim_y)
             
@@ -508,7 +508,8 @@ def merge_buffers(offscreen_A, offscreen_B, operation, dim_x, dim_y):
             bgl.glBindTexture(bgl.GL_TEXTURE_2D, offscreen_B.color_texture)              
             shader.bind()
             shader.uniform_int("Sampler0", 0)
-            shader.uniform_int("Sampler1", 1)              
+            shader.uniform_int("Sampler1", 1)
+            shader.uniform_float("Variable", variable)             
             batch.draw(shader)
 
     copy_buffer(offscreen_C, offscreen_A, dim_x, dim_y)
