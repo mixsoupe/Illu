@@ -40,6 +40,10 @@ class Geometry:
             self.soft_shadow = get_socket_value(node, "Soft Shadow")
             self.line_scale = get_socket_value(node, "Line Scale") * 2
             self.line_detection = get_socket_value(node, "Line Detection")
+
+            self.line_light = get_socket_value(node, "Line Light Influence")
+            self.line_light_angle = get_socket_value(node, "Line Light Angle")
+
             self.noise_diffusion = get_socket_value(node, "Noise Diffusion")
             self.shadows = get_socket_value(node, "Shadows")
 
@@ -108,7 +112,7 @@ class Geometry:
             distances = np.linalg.norm(vertices - camera_loc, ord=2, axis=1.)
             distance_average = np.average(distances)
             
-            #Check et récupération de l'épaisseur
+            #Check et récupération des vertex groups
             thick_eval = False  
             vgroups = obj.vertex_groups
 
@@ -124,8 +128,12 @@ class Geometry:
             else:
                 weights = np.ones(len(mesh.vertices))
 
+            
+
             #Calcul des normales
-            camera_vector = camera.matrix_world.to_quaternion() @ Vector((0.0, 0.0, 1.0))
+            line_angle = math.radians(self.line_light_angle + 180 )            
+            line_vector = [math.sin(line_angle), math.cos(line_angle)]
+            camera_vector = camera.matrix_world.to_quaternion() @ Vector((line_vector[0], line_vector[1], 0.0))
             normals_to_camera = np.dot(normales, camera_vector)
 
             #final color  

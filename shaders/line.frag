@@ -4,6 +4,7 @@ uniform sampler2D Sampler;
 uniform sampler2D Depth_buffer;
 uniform float line_detection;
 uniform float depth_precision;
+uniform float line_light;
 uniform int border;         
 
 mat3 sx = mat3( 
@@ -87,7 +88,10 @@ void main()
     //n = smoothstep(0.0, 1.0, n); // DEFAULT 0.1, 0.4
 
     d *= max((1-center_depth)/depth_precision, 0.05) * line_detection * 100 ;
+    
     d = smoothstep(0.3, 1.0, d); // DEFAULT 0.1, 0.4
+    d *= mix(1, center_normal, line_light);
+
     
 
 

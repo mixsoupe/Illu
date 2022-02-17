@@ -436,7 +436,7 @@ def bgl_filter_sss(offscreen_A, depth_buffer, dim_x, dim_y, samples = 60, radius
     offscreen_B.free()
 
 
-def bgl_filter_line(offscreen_A, depth_buffer, dim_x, dim_y, line_detection, border, depth_precision):     
+def bgl_filter_line(offscreen_A, depth_buffer, dim_x, dim_y, line_detection, line_light, border, depth_precision):     
     offscreen_B = gpu.types.GPUOffScreen(dim_x, dim_y)
             
     shader = compile_shader("image2d.vert", "line.frag")                        
@@ -455,6 +455,7 @@ def bgl_filter_line(offscreen_A, depth_buffer, dim_x, dim_y, line_detection, bor
             shader.uniform_int("Depth_buffer", 1)
             shader.uniform_int("border", border)
             shader.uniform_float("line_detection", line_detection)
+            shader.uniform_float("line_light", line_light)
             shader.uniform_float("depth_precision", depth_precision)
             batch.draw(shader)
 

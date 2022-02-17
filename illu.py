@@ -137,7 +137,7 @@ def render_node(geo, shadow_objects):
         bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = int(60*geo.scale), radius = 20*geo.scale, depth_precision = depth_precision, channel = (1,0,0,0))
     
     #Ajouter le trait
-    bgl_filter_line(base_buffer, depth_buffer, dim_x, dim_y, geo.line_detection, False, depth_precision)
+    bgl_filter_line(base_buffer, depth_buffer, dim_x, dim_y, geo.line_detection, geo.line_light, False, depth_precision)
     bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 10, radius = geo.line_scale/2, depth_precision = depth_precision, channel = (0,0,1,0))
     bgl_filter_custom(base_buffer, dim_x, dim_y, "line_filter", geo.line_scale*2)
     #Antialiasing trait
