@@ -128,6 +128,20 @@ class Geometry:
             else:
                 weights = np.ones(len(mesh.vertices))
 
+
+            #Merge 2 VG
+            thick_eval = False
+            for vg in vgroups:
+                if vg.name == "Light_Line":
+                    thick_eval = True
+                    break
+            if thick_eval:
+                light_weight_list = []
+                for i in range(len(mesh.vertices)):
+                    light_weight_list.append(vg.weight(i))
+                light_weight = np.asarray(light_weight_list)
+            else:
+                light_weight = np.ones(len(mesh.vertices))
             
 
             #Calcul des normales
@@ -135,6 +149,7 @@ class Geometry:
             line_vector = [math.sin(line_angle), math.cos(line_angle)]
             camera_vector = camera.matrix_world.to_quaternion() @ Vector((line_vector[0], line_vector[1], 0.0))
             normals_to_camera = np.dot(normales, camera_vector)
+            normals_to_camera = np.clip(np.dot(normales, camera_vector), 0, 1) + 1-light_weight
 
             #final color  
             color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
