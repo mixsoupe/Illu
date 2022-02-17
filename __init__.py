@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (2, 92, 0),
-    "version" : (1, 5, 1),
+    "version" : (1, 6, 0),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
@@ -175,6 +175,11 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
         default = False
         )
 
+    shadow: bpy.props.FloatProperty(
+        name="Shadow",
+        default = 1.0
+        )
+
     def _new_node_tree(self):
         nt_name= '.' + self.bl_name + '_nodetree'
         self.node_tree=bpy.data.node_groups.new(nt_name, 'ShaderNodeTree')
@@ -236,6 +241,7 @@ class ILLU_2DShade(bpy.types.ShaderNodeCustomGroup, NodeHelper):
         layout.prop(self, 'shadow_size')
         layout.prop(self, 'self_shading')
         layout.prop(self, 'bake_to_uvs')
+        layout.prop(self, 'shadow')
         layout.operator("illu.update")        
 
     def init(self, context):

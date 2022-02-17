@@ -167,7 +167,7 @@ def render_node(geo, shadow_objects):
     
     #Antialiasing
     bgl_filter_expand(base_buffer, dim_x, dim_y, 2)  
-    bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 10, radius = 1, channel = (1,1,0,0))
+    bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = 10, radius = 1, depth_precision = depth_precision, channel = (1,1,0,0))
 
     #Bake    
     if geo.bake_to_uvs:
