@@ -117,26 +117,21 @@ class Geometry:
 
             vgroups_list = []
 
+            thickness_weight = np.ones(len(mesh.vertices))
+            light_weight = np.ones(len(mesh.vertices))
+            shade_weight = np.ones(len(mesh.vertices))
+
             for vg in vgroups:
                 if vg.name == "Thickness" :           
                     vgroups_list.append(vg)
-                    eval.append("Thickness")
-                else:
-                    thickness_weight = np.ones(len(mesh.vertices))
-                
+                    eval.append("Thickness")               
                 if vg.name == "Light" :              
                     vgroups_list.append(vg)
                     eval.append("Light")
-                else:
-                    light_weight = np.ones(len(mesh.vertices))
-
                 if vg.name == "Shade" :              
                     vgroups_list.append(vg)
                     eval.append("Shade")
-                else:
-                    shade_weight = np.ones(len(mesh.vertices))
-                
-
+                    
             if eval:
                 thickness_weight_list = []
                 light_weight_list = []
