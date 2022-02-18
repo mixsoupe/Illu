@@ -682,6 +682,8 @@ def get_socket_value(this_node, input, default = 1):
         if (input == "Smoothness"):
             input = "Depth Precision"
             socket = this_node.inputs[input]
+        elif (input == "Line Light Influence"):
+            return 0
         else:
             return default
     links = socket.links

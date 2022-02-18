@@ -91,71 +91,114 @@ class Geometry:
             mesh.vertices.foreach_get(
                 "normal", np.reshape(normales, vlen * 3)) 
 
-            #Orco coordinates            
-            bm = bmesh.new()
-            mesh_orco = bpy.data.meshes.new("temp_mesh_orco")         
-            bm.from_object(object=obj, depsgraph=depsgraph, deform=False)
-            bm.to_mesh(mesh_orco)        
-            bmesh.ops.triangulate(bm, faces=bm.faces[:])         
-            bm.free()
+            # #Orco coordinates            
+            # bm = bmesh.new()
+            # mesh_orco = bpy.data.meshes.new("temp_mesh_orco")         
+            # bm.from_object(object=obj, depsgraph=depsgraph, deform=False)
+            # bm.to_mesh(mesh_orco)        
+            # bmesh.ops.triangulate(bm, faces=bm.faces[:])         
+            # bm.free()
                     
-            vlen_orco = len(mesh_orco.vertices)
+            # vlen_orco = len(mesh_orco.vertices)
             
-            orco = np.empty((vlen_orco, 3), 'f')
-            mesh_orco.vertices.foreach_get(
-                "co", np.reshape(orco, vlen_orco * 3))
+            # orco = np.empty((vlen_orco, 3), 'f')
+            # mesh_orco.vertices.foreach_get(
+            #     "co", np.reshape(orco, vlen_orco * 3))
 
-            #Calcul et normalisation zdepth
-             
+            #Calcul et normalisation zdepth             
             camera = bpy.context.scene.camera
             camera_loc = camera.location  
             distances = np.linalg.norm(vertices - camera_loc, ord=2, axis=1.)
             distance_average = np.average(distances)
             
             #Check et récupération des vertex groups
-            thick_eval = False  
+            eval = []
             vgroups = obj.vertex_groups
 
-            for vg in vgroups:
-                if vg.name == "Thickness":
-                    thick_eval = True
-                    break
-            if thick_eval:
-                weight_list = []
-                for i in range(len(mesh.vertices)):
-                    weight_list.append(vg.weight(i))
-                weights = np.asarray(weight_list)
-            else:
-                weights = np.ones(len(mesh.vertices))
+            vgroups_list = []
 
-
-            #Merge 2 VG
-            thick_eval = False
             for vg in vgroups:
-                if vg.name == "Light_Line":
-                    thick_eval = True
-                    break
-            if thick_eval:
+                if vg.name == "Thickness" :           
+                    vgroups_list.append(vg)
+                    eval.append("Thickness")
+                else:
+                    thickness_weight = np.ones(len(mesh.vertices))
+                
+                if vg.name == "Light" :              
+                    vgroups_list.append(vg)
+                    eval.append("Light")
+                else:
+                    light_weight = np.ones(len(mesh.vertices))
+
+                if vg.name == "Shade" :              
+                    vgroups_list.append(vg)
+                    eval.append("Shade")
+                else:
+                    shade_weight = np.ones(len(mesh.vertices))
+                
+
+            if eval:
+                thickness_weight_list = []
                 light_weight_list = []
-                for i in range(len(mesh.vertices)):
-                    light_weight_list.append(vg.weight(i))
-                light_weight = np.asarray(light_weight_list)
-            else:
-                light_weight = np.ones(len(mesh.vertices))
-
-            #Merge 3 VG
-            thick_eval = False
-            for vg in vgroups:
-                if vg.name == "Shade":
-                    thick_eval = True
-                    break
-            if thick_eval:
                 shade_weight_list = []
+
                 for i in range(len(mesh.vertices)):
-                    shade_weight_list.append(vg.weight(i))
-                shade_weight = np.asarray(shade_weight_list)
-            else:
-                shade_weight = np.ones(len(mesh.vertices))
+                    for vg in vgroups_list:
+                        if vg.name == "Thickness":
+                            thickness_weight_list.append(vg.weight(i))
+                        if vg.name == "Light":
+                            light_weight_list.append(vg.weight(i))
+                        if vg.name == "Shade":
+                            shade_weight_list.append(vg.weight(i))
+                
+                if "Thickness" in eval:
+                    thickness_weight = np.asarray(thickness_weight_list)
+                if "Light" in eval:
+                    light_weight = np.asarray(light_weight_list)
+                if "Shade" in eval:
+                    shade_weight = np.asarray(shade_weight_list)
+
+
+            # thick_eval = False  
+            # for vg in vgroups:
+            #     if vg.name == "Thickness":
+            #         thick_eval = True
+            #         break
+            # if thick_eval:
+            #     weight_list = []
+            #     for i in range(len(mesh.vertices)):
+            #         weight_list.append(vg.weight(i))
+            #     weights = np.asarray(weight_list)
+            # else:
+            #     weights = np.ones(len(mesh.vertices))
+
+            # #Merge 2 VG
+            # thick_eval = False
+            # for vg in vgroups:
+            #     if vg.name == "Light":
+            #         thick_eval = True
+            #         break
+            # if thick_eval:
+            #     light_weight_list = [   ]
+            #     for i in range(len(mesh.vertices)):
+            #         light_weight_list.append(vg.weight(i))
+            #     light_weight = np.asarray(light_weight_list)
+            # else:
+            #     light_weight = np.ones(len(mesh.vertices))
+
+            # #Merge 3 VG
+            # thick_eval = False
+            # for vg in vgroups:
+            #     if vg.name == "Shade":
+            #         thick_eval = True
+            #         break
+            # if thick_eval:
+            #     shade_weight_list = []
+            #     for i in range(len(mesh.vertices)):
+            #         shade_weight_list.append(vg.weight(i))
+            #     shade_weight = np.asarray(shade_weight_list)
+            # else:
+            #     shade_weight = np.ones(len(mesh.vertices))
             
 
             #Calcul des normales
@@ -166,8 +209,8 @@ class Geometry:
             normals_to_camera = np.clip(np.dot(normales, camera_vector), 0, 1) + 1-light_weight
 
             #final color  
-            colorA_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
-            colorB_rgba = np.c_[shade_weight, weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
+            colorA_rgba = np.c_[np.ones(len(mesh.vertices)), thickness_weight, normals_to_camera, np.ones(len(mesh.vertices)) ]
+            colorB_rgba = np.c_[shade_weight, thickness_weight, normals_to_camera, np.ones(len(mesh.vertices)) ]
 
             colorA_rgba = colorA_rgba.tolist()
             colorB_rgba = colorB_rgba.tolist()
@@ -215,7 +258,7 @@ class Geometry:
         if self.node:
             self.colorsA = colorA_rgba
             self.colorsB = colorB_rgba
-            self.orco = orco
+            # self.orco = orco
             self.distance = distance_average
             
             if self.bake_to_uvs:
