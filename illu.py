@@ -102,6 +102,7 @@ def render_node(geo, shadow_objects):
 
     #Create buffers    
     base_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
+    baseB_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     depth_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     sdf_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
     erosion_buffer = gpu.types.GPUOffScreen(dim_x, dim_y)
@@ -115,25 +116,26 @@ def render_node(geo, shadow_objects):
     #Shadow Buffer
     if shadow_objects:
         vertices_shadow, indices_shadow = build_shadow(shadow_objects, geo)
-        bgl_shadow(shadow_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors, vertices_shadow, indices_shadow, geo.light, geo.shadow_size, geo.soft_shadow)         
+        bgl_shadow(shadow_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colorsA, vertices_shadow, indices_shadow, geo.light, geo.shadow_size, geo.soft_shadow)         
 
 
     #Base render
-    bgl_base_render(base_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)    
-    bgl_depth_render(depth_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colors)  
+    bgl_base_render(base_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colorsA)
+    bgl_base_render(baseB_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colorsB)   
+    bgl_depth_render(depth_buffer, dim_x, dim_y, geo.vertices, geo.indices, geo.colorsA)  
     
-    #Distance field buffer (transparence)
-    
-    copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)    
+    # #Distance field buffer (transparence)    
+    copy_buffer(base_buffer, sdf_buffer, dim_x, dim_y)
     if geo.self_shading:
         bgl_filter_expand(sdf_buffer, dim_x, dim_y, 3, channel = (1,1,1,1))
     bgl_filter_distance_field(sdf_buffer, dim_x, dim_y, geo.scale)    
     bgl_filter_sss(sdf_buffer, depth_buffer, dim_x, dim_y, samples = 20, radius = 20, depth_precision = depth_precision)
     merge_buffers(base_buffer, sdf_buffer, "merge_SDF_post", dim_x, dim_y)  
     
-    #Decal (shading)
-    if geo.self_shading:   
+    #Decal (shading)    
+    if geo.self_shading:
         bgl_filter_decal(base_buffer, depth_buffer, dim_x, dim_y, geo.light, geo.scale, depth_precision, geo.angle)
+        merge_buffers(base_buffer, baseB_buffer, "merge_decal", dim_x, dim_y)
         bgl_filter_sss(base_buffer, depth_buffer, dim_x, dim_y, samples = int(60*geo.scale), radius = 20*geo.scale, depth_precision = depth_precision, channel = (1,0,0,0))
     
     #Ajouter le trait
@@ -199,6 +201,7 @@ def render_node(geo, shadow_objects):
     sdf_buffer.free()
     erosion_buffer.free()
     base_buffer.free()
+    baseB_buffer.free()
     depth_buffer.free()
     line_buffer.free()
     noise_buffer.free()

@@ -142,6 +142,20 @@ class Geometry:
                 light_weight = np.asarray(light_weight_list)
             else:
                 light_weight = np.ones(len(mesh.vertices))
+
+            #Merge 3 VG
+            thick_eval = False
+            for vg in vgroups:
+                if vg.name == "Shade":
+                    thick_eval = True
+                    break
+            if thick_eval:
+                shade_weight_list = []
+                for i in range(len(mesh.vertices)):
+                    shade_weight_list.append(vg.weight(i))
+                shade_weight = np.asarray(shade_weight_list)
+            else:
+                shade_weight = np.ones(len(mesh.vertices))
             
 
             #Calcul des normales
@@ -152,8 +166,11 @@ class Geometry:
             normals_to_camera = np.clip(np.dot(normales, camera_vector), 0, 1) + 1-light_weight
 
             #final color  
-            color_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
-            color_rgba = color_rgba.tolist()
+            colorA_rgba = np.c_[np.ones(len(mesh.vertices)), weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
+            colorB_rgba = np.c_[shade_weight, weights, normals_to_camera, np.ones(len(mesh.vertices)) ]
+
+            colorA_rgba = colorA_rgba.tolist()
+            colorB_rgba = colorB_rgba.tolist()
 
             #UVs
             if self.bake_to_uvs:
@@ -196,7 +213,8 @@ class Geometry:
         self.indices = indices
         
         if self.node:
-            self.colors = color_rgba
+            self.colorsA = colorA_rgba
+            self.colorsB = colorB_rgba
             self.orco = orco
             self.distance = distance_average
             
